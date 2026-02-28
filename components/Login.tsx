@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { USER_LIST } from '../constants';
 import { User } from '../types';
+import { gasService } from '../services/gasService';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -13,29 +14,28 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Simulate network delay for "sophistication"
-    setTimeout(() => {
-      const foundUser = USER_LIST.find(
-        (u) => u.username === username.toLowerCase() && u.password === password
-      );
-
-      if (foundUser) {
+    try {
+      const response = await gasService.login(username, password);
+      if (response.success) {
         onLogin({
-          username: foundUser.username,
-          role: foundUser.role as 'admin' | 'puskesmas',
-          puskesmasName: foundUser.name,
-          puskesmasId: (foundUser as any).id
+          username: response.user.username,
+          role: response.user.role,
+          puskesmasName: response.user.puskesmasName,
+          puskesmasId: response.user.puskesmasId
         });
       } else {
-        setError('Username atau password salah. Silakan coba lagi.');
-        setIsLoading(false);
+        setError(response.message || 'Username atau password salah.');
       }
-    }, 1500);
+    } catch (err) {
+      setError('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
