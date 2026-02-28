@@ -1,0 +1,55 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Manajemen User</h1>
+    <p class="text-slate-500 font-medium">Tambah atau Edit Pengguna Sistem</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'USER')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Informasi Akun</h3>
+          <div>
+            <label class="form-label">Username</label>
+            <input type="text" name="UUsername" class="form-input" placeholder="username_baru" required>
+          </div>
+          <div>
+            <label class="form-label">Password</label>
+            <input type="password" name="Password" class="form-input" placeholder="••••••••" required>
+          </div>
+          <div>
+            <label class="form-label">Role / Hak Akses</label>
+            <select name="Role" class="form-input" required>
+              <option value="USER">User (Puskesmas)</option>
+              <option value="ADMIN">Admin (Dinkes)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Profil Pengguna</h3>
+          <div>
+            <label class="form-label">Nama Lengkap / Puskesmas</label>
+            <input type="text" name="Name" class="form-input" placeholder="Nama Lengkap" required>
+          </div>
+          <div>
+            <label class="form-label">ID Puskesmas</label>
+            <input type="text" name="ID_Puskesmas" class="form-input" placeholder="P001" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN USER
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Formulir RPJMN</h1>
+    <p class="text-slate-500 font-medium">Laporan Indikator RPJMN Kesehatan Anak</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'RPJMN')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Periode -->
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Informasi Periode</h3>
+          <div>
+            <label class="form-label">Tahun</label>
+            <select name="Tahun" class="form-input" required>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Bulan</label>
+            <select name="Bulan" class="form-input" required>
+              <option value="Januari">Januari</option>
+              <option value="Februari">Februari</option>
+              <option value="Maret">Maret</option>
+              <option value="April">April</option>
+              <option value="Mei">Mei</option>
+              <option value="Juni">Juni</option>
+              <option value="Juli">Juli</option>
+              <option value="Agustus">Agustus</option>
+              <option value="September">September</option>
+              <option value="Oktober">Oktober</option>
+              <option value="November">November</option>
+              <option value="Desember">Desember</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Data Indikator -->
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Indikator Capaian</h3>
+          <div>
+            <label class="form-label">Persentase Imunisasi Dasar Lengkap (%)</label>
+            <input type="number" step="0.01" name="Imunisasi_Dasar_Lengkap" class="form-input" placeholder="0.00" required>
+          </div>
+          <div>
+            <label class="form-label">Persentase ASI Eksklusif (%)</label>
+            <input type="number" step="0.01" name="ASI_Eksklusif" class="form-input" placeholder="0.00" required>
+          </div>
+          <div>
+            <label class="form-label">Jumlah Kematian Neonatal</label>
+            <input type="number" name="Jumlah_Kematian_Neonatal" class="form-input" placeholder="0" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN LAPORAN
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

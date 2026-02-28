@@ -1,0 +1,75 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Kematian Balita</h1>
+    <p class="text-slate-500 font-medium">Laporan Kematian Anak Balita (29 Hari - 59 Bulan)</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'Kematian_Balita')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Identitas Anak</h3>
+          <div>
+            <label class="form-label">Nama Anak</label>
+            <input type="text" name="Nama_Anak" class="form-input" placeholder="Masukkan nama" required>
+          </div>
+          <div>
+            <label class="form-label">Umur (Bulan)</label>
+            <input type="number" name="Umur_Bulan" class="form-input" placeholder="0" required>
+          </div>
+          <div>
+            <label class="form-label">Tanggal Kematian</label>
+            <input type="date" name="Tanggal_Kematian" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Detail Medis</h3>
+          <div>
+            <label class="form-label">Penyebab Kematian</label>
+            <select name="Penyebab_Kematian" class="form-input" required>
+              <option value="Diare">Diare</option>
+              <option value="Pneumonia">Pneumonia</option>
+              <option value="DBD">DBD</option>
+              <option value="Kecelakaan">Kecelakaan</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Bulan Laporan</label>
+            <select name="Bulan" class="form-input" required>
+              <option value="Januari">Januari</option>
+              <option value="Februari">Februari</option>
+              <option value="Maret">Maret</option>
+              <option value="April">April</option>
+              <option value="Mei">Mei</option>
+              <option value="Juni">Juni</option>
+              <option value="Juli">Juli</option>
+              <option value="Agustus">Agustus</option>
+              <option value="September">September</option>
+              <option value="Oktober">Oktober</option>
+              <option value="November">November</option>
+              <option value="Desember">Desember</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Jumlah Kematian</label>
+            <input type="number" name="Kematian_Balita(0-59_bln)(neonatal_+_post_neonatal+anak_balita)" class="form-input" value="1" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN DATA
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

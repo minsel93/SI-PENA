@@ -1,0 +1,55 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Data Sasaran</h1>
+    <p class="text-slate-500 font-medium">Pengaturan Target Sasaran Kesehatan Anak</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'SASARAN')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Informasi Wilayah</h3>
+          <div>
+            <label class="form-label">Tahun Anggaran</label>
+            <select name="Tahun" class="form-input" required>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Nama Desa/Kelurahan</label>
+            <input type="text" name="Desa_Kelurahan" class="form-input" placeholder="Nama Desa" required>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Target Sasaran</h3>
+          <div>
+            <label class="form-label">Jumlah Bayi (0-11 Bulan)</label>
+            <input type="number" name="Sasaran_Bayi" class="form-input" placeholder="0" required>
+          </div>
+          <div>
+            <label class="form-label">Jumlah Anak Balita (12-59 Bulan)</label>
+            <input type="number" name="Sasaran_Balita" class="form-input" placeholder="0" required>
+          </div>
+          <div>
+            <label class="form-label">Jumlah Ibu Hamil</label>
+            <input type="number" name="Sasaran_Ibu_Hamil" class="form-input" placeholder="0" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN SASARAN
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SI-PENA | Sistem Pelaporan Kesehatan Anak</title>
+    
+    <!-- Tailwind CSS & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- GAS include simulation -->
+    <style>
+      /* Styles will be injected here */
+      <?!= include('Styles'); ?>
+    </style>
+  </head>
+  <body class="bg-slate-50 font-sans">
+    
+    <div id="app">
+      <!-- Login View -->
+      <div id="login-view" class="min-h-screen flex items-center justify-center bg-blue-900 p-6">
+        <div class="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md text-center">
+          <img src="https://i.ibb.co.com/b58BrxT3/IMAGE-1.png" class="h-24 mx-auto mb-6" alt="Logo">
+          <h1 class="text-3xl font-black text-blue-900">SI-PENA</h1>
+          <p class="text-slate-400 font-bold text-xs uppercase mb-8 tracking-widest">Sistem Pelaporan Kesehatan Anak</p>
+          
+          <div class="space-y-4">
+            <div class="relative">
+              <i class="bi bi-person absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="username" placeholder="Username" class="w-full pl-12 pr-4 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none font-medium">
+            </div>
+            <div class="relative">
+              <i class="bi bi-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="password" id="password" placeholder="Password" class="w-full pl-12 pr-4 py-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-500 outline-none font-medium">
+            </div>
+            <button onclick="handleLogin()" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-95">
+              MASUK
+            </button>
+            <p id="login-error" class="text-rose-500 text-sm font-bold hidden"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main App View -->
+      <div id="main-view" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white p-4 flex justify-between items-center px-8 border-b shadow-sm sticky top-0 z-50">
+          <div class="flex items-center gap-4 cursor-pointer" onclick="loadView('Dashboard')">
+            <img src="https://i.ibb.co.com/b58BrxT3/IMAGE-1.png" class="h-10">
+            <div>
+              <h2 class="text-lg font-black text-blue-900 leading-none">SI-PENA</h2>
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Kesehatan Anak</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-6">
+            <div class="text-right hidden sm:block">
+              <p id="user-display-name" class="text-sm font-black text-slate-800"></p>
+              <p id="user-display-role" class="text-[10px] font-bold text-blue-600 uppercase"></p>
+            </div>
+            <button onclick="handleLogout()" class="flex items-center gap-2 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-rose-100 transition-colors">
+              <i class="bi bi-box-arrow-right"></i>
+              <span>KELUAR</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+          <!-- Sidebar -->
+          <aside id="sidebar-container" class="w-72 bg-white border-r overflow-y-auto hidden lg:block">
+            <?!= include('Sidebar'); ?>
+          </aside>
+
+          <!-- Content Area -->
+          <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+            <div id="content-area" class="max-w-6xl mx-auto">
+              <!-- Dynamic content will be loaded here -->
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Loader -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex items-center justify-center">
+      <div class="bg-white p-8 rounded-[40px] shadow-2xl flex flex-col items-center gap-4">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="font-black text-blue-900 uppercase tracking-widest text-xs">Memproses Data...</p>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+      // Mock google.script.run for local development
+      if (typeof google === 'undefined') {
+        window.google = {
+          script: {
+            run: {
+              withSuccessHandler: function(callback) {
+                this._successHandler = callback;
+                return this;
+              },
+              withFailureHandler: function(callback) {
+                this._failureHandler = callback;
+                return this;
+              },
+              getPartial: function(filename) {
+                fetch('/api/gas', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ functionName: 'getPartial', args: [filename] })
+                })
+                .then(res => res.json())
+                .then(res => {
+                  if (res.success) this._successHandler(res.data);
+                  else this._failureHandler(res.error);
+                });
+              },
+              login: function(u, p) {
+                fetch('/api/gas', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ functionName: 'login', args: [u, p] })
+                })
+                .then(res => res.json())
+                .then(res => {
+                  if (res.success) this._successHandler(res.data);
+                  else this._failureHandler(res.error);
+                });
+              },
+              submitDataToServer: function(sheet, data) {
+                fetch('/api/gas', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ functionName: 'submitDataToServer', args: [sheet, data] })
+                })
+                .then(res => res.json())
+                .then(res => {
+                  if (res.success) this._successHandler(res.data);
+                  else this._failureHandler(res.error);
+                });
+              }
+            }
+          }
+        };
+      }
+    </script>
+    
+    <?!= include('Scripts'); ?>
+  </body>
+</html>

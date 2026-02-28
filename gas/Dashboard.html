@@ -1,0 +1,148 @@
+<div class="animate-fade-in">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+    <div>
+      <h1 class="text-3xl font-black text-blue-900">Selamat Datang, <span id="dash-user-name"></span>!</h1>
+      <p class="text-slate-500 font-medium">Pantau data kesehatan anak di wilayah Anda hari ini.</p>
+    </div>
+    <div class="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border">
+      <div class="bg-blue-600 text-white p-3 rounded-xl">
+        <i class="bi bi-calendar3"></i>
+      </div>
+      <div class="pr-4">
+        <p class="text-[10px] font-bold text-slate-400 uppercase">Tanggal Hari Ini</p>
+        <p class="text-sm font-black text-slate-800" id="current-date"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 card-hover">
+      <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+        <i class="bi bi-heart-pulse-fill"></i>
+      </div>
+      <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Kematian Neonatal</p>
+      <h3 class="text-2xl font-black text-slate-800 mt-1">0</h3>
+      <p class="text-[10px] text-slate-400 mt-2 font-bold">Bulan ini</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 card-hover">
+      <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+        <i class="bi bi-activity"></i>
+      </div>
+      <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Kematian Balita</p>
+      <h3 class="text-2xl font-black text-slate-800 mt-1">0</h3>
+      <p class="text-[10px] text-slate-400 mt-2 font-bold">Bulan ini</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 card-hover">
+      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Kelas Balita</p>
+      <h3 class="text-2xl font-black text-slate-800 mt-1">0</h3>
+      <p class="text-[10px] text-slate-400 mt-2 font-bold">Kegiatan terlaksana</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 card-hover">
+      <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4 text-xl">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Target RPJMN</p>
+      <h3 class="text-2xl font-black text-slate-800 mt-1">0%</h3>
+      <p class="text-[10px] text-slate-400 mt-2 font-bold">Capaian tahun ini</p>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    <div class="lg:col-span-2 bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="text-xl font-black text-slate-800">Tren Kematian Anak</h3>
+        <select class="bg-slate-50 border-none rounded-xl text-xs font-bold px-4 py-2 outline-none">
+          <option>Tahun 2024</option>
+        </select>
+      </div>
+      <div class="h-[300px]">
+        <canvas id="deathTrendChart"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-blue-900 p-8 rounded-[40px] shadow-xl text-white relative overflow-hidden">
+      <div class="relative z-10">
+        <h3 class="text-xl font-black mb-2">AI Insights</h3>
+        <p class="text-blue-200 text-sm font-medium mb-6">Analisis cerdas berdasarkan data laporan Anda.</p>
+        
+        <div class="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10">
+          <p class="text-sm leading-relaxed italic" id="ai-insight-text">
+            "Memuat analisis data..."
+          </p>
+        </div>
+        
+        <button onclick="refreshAI()" class="mt-6 w-full bg-white text-blue-900 font-black py-3 rounded-2xl text-sm hover:bg-blue-50 transition-colors">
+          REFRESH ANALISIS
+        </button>
+      </div>
+      
+      <!-- Decorative circles -->
+      <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-800 rounded-full blur-3xl opacity-50"></div>
+      <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-600 rounded-full blur-3xl opacity-20"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    document.getElementById('dash-user-name').innerText = state.user.username;
+    
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', options);
+
+    // Initialize Chart
+    const ctx = document.getElementById('deathTrendChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+        datasets: [{
+          label: 'Neonatal',
+          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#2563eb',
+          backgroundColor: '#2563eb20',
+          fill: true,
+          tension: 0.4
+        }, {
+          label: 'Balita',
+          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#e11d48',
+          backgroundColor: '#e11d4820',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { display: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // Mock AI Insight
+    setTimeout(() => {
+      document.getElementById('ai-insight-text').innerText = '"Berdasarkan data bulan ini, terdapat penurunan angka kematian neonatal sebesar 12% dibandingkan bulan lalu. Terus tingkatkan kunjungan rumah untuk ibu hamil risiko tinggi."';
+    }, 1500);
+  })();
+
+  function refreshAI() {
+    document.getElementById('ai-insight-text').innerText = '"Menganalisis data terbaru..."';
+    setTimeout(() => {
+      document.getElementById('ai-insight-text').innerText = '"Data sasaran imunisasi telah mencapai 85% dari target tahunan. Fokus pada wilayah Puskesmas Pembantu untuk sisa 15%."';
+    }, 2000);
+  }
+</script>

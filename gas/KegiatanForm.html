@@ -1,0 +1,58 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Data Kegiatan</h1>
+    <p class="text-slate-500 font-medium">Laporan Kegiatan Rutin Puskesmas</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'KEGIATAN')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Informasi Kegiatan</h3>
+          <div>
+            <label class="form-label">Jenis Kegiatan</label>
+            <select name="Jenis_Kegiatan" class="form-input" required>
+              <option value="Posyandu">Posyandu</option>
+              <option value="Kunjungan Rumah">Kunjungan Rumah</option>
+              <option value="Pemberian Vitamin A">Pemberian Vitamin A</option>
+              <option value="Imunisasi">Imunisasi</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Tanggal Kegiatan</label>
+            <input type="date" name="Tanggal" class="form-input" required>
+          </div>
+          <div>
+            <label class="form-label">Lokasi</label>
+            <input type="text" name="Lokasi" class="form-input" placeholder="Nama Posyandu/Dusun" required>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Hasil Kegiatan</h3>
+          <div>
+            <label class="form-label">Jumlah Sasaran Hadir</label>
+            <input type="number" name="Jumlah_Hadir" class="form-input" placeholder="0" required>
+          </div>
+          <div>
+            <label class="form-label">Keterangan / Temuan</label>
+            <textarea name="Keterangan" class="form-input h-32" placeholder="Catatan penting kegiatan..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN KEGIATAN
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

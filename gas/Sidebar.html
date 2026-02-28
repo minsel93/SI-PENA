@@ -1,0 +1,81 @@
+<div class="p-6">
+  <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Menu Utama</p>
+  
+  <nav class="space-y-2">
+    <button onclick="loadView('Dashboard')" class="sidebar-link active" id="nav-Dashboard">
+      <i class="bi bi-grid-fill"></i>
+      <span>Dashboard</span>
+    </button>
+    
+    <div class="pt-4">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Pelaporan</p>
+      <div class="space-y-1">
+        <button onclick="loadView('RPJMNForm')" class="sidebar-link" id="nav-RPJMNForm">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Form RPJMN</span>
+        </button>
+        <button onclick="loadView('KematianNeonatalForm')" class="sidebar-link" id="nav-KematianNeonatalForm">
+          <i class="bi bi-heart-pulse"></i>
+          <span>Kematian Neonatal</span>
+        </button>
+        <button onclick="loadView('KematianBalitaForm')" class="sidebar-link" id="nav-KematianBalitaForm">
+          <i class="bi bi-activity"></i>
+          <span>Kematian Balita</span>
+        </button>
+        <button onclick="loadView('KelasBalitaForm')" class="sidebar-link" id="nav-KelasBalitaForm">
+          <i class="bi bi-people"></i>
+          <span>Kelas Balita</span>
+        </button>
+        <button onclick="loadView('KelasBalitaKabKotaForm')" class="sidebar-link" id="nav-KelasBalitaKabKotaForm">
+          <i class="bi bi-building"></i>
+          <span>Kelas Balita Kab/Kota</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Master Data</p>
+      <div class="space-y-1">
+        <button onclick="loadView('SasaranForm')" class="sidebar-link" id="nav-SasaranForm">
+          <i class="bi bi-target"></i>
+          <span>Data Sasaran</span>
+        </button>
+        <button onclick="loadView('KegiatanForm')" class="sidebar-link" id="nav-KegiatanForm">
+          <i class="bi bi-calendar-event"></i>
+          <span>Data Kegiatan</span>
+        </button>
+        <button onclick="loadView('UserForm')" class="sidebar-link" id="nav-UserForm">
+          <i class="bi bi-person-gear"></i>
+          <span>Manajemen User</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<style>
+  .sidebar-link {
+    @apply w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-blue-600 transition-all;
+  }
+  .sidebar-link i {
+    @apply text-lg;
+  }
+  .sidebar-link.active {
+    @apply bg-blue-50 text-blue-600;
+  }
+</style>
+
+<script>
+  // Update active state in sidebar
+  (function() {
+    const currentView = state.currentView;
+    const links = document.querySelectorAll('.sidebar-link');
+    links.forEach(link => {
+      if (link.id === 'nav-' + currentView) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  })();
+</script>

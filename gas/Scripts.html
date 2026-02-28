@@ -1,0 +1,131 @@
+<script>
+  /**
+   * SI-PENA Client-Side Logic
+   */
+
+  // Global State
+  const state = {
+    user: null,
+    currentView: 'Dashboard',
+    isLoading: false
+  };
+
+  // Initialization
+  window.onload = () => {
+    const savedUser = localStorage.getItem('si-pena-user');
+    if (savedUser) {
+      state.user = JSON.parse(savedUser);
+      showMainApp();
+    }
+  };
+
+  function showLoader(show) {
+    state.isLoading = show;
+    document.getElementById('global-loader').classList.toggle('hidden', !show);
+  }
+
+  function handleLogin() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+    
+    if (!u || !p) {
+      errorEl.innerText = 'Harap isi semua bidang!';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    showLoader(true);
+    google.script.run
+      .withSuccessHandler((res) => {
+        showLoader(false);
+        if (res.success) {
+          state.user = res.user;
+          localStorage.setItem('si-pena-user', JSON.stringify(res.user));
+          showMainApp();
+        } else {
+          errorEl.innerText = res.message;
+          errorEl.classList.remove('hidden');
+        }
+      })
+      .withFailureHandler((err) => {
+        showLoader(false);
+        errorEl.innerText = 'Error: ' + err;
+        errorEl.classList.remove('hidden');
+      })
+      .login(u, p);
+  }
+
+  function showMainApp() {
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('main-view').classList.remove('hidden');
+    document.getElementById('user-display-name').innerText = state.user.username;
+    document.getElementById('user-display-role').innerText = state.user.role;
+    loadView('Dashboard');
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('si-pena-user');
+    location.reload();
+  }
+
+  function loadView(viewName) {
+    state.currentView = viewName;
+    showLoader(true);
+    
+    google.script.run
+      .withSuccessHandler((html) => {
+        showLoader(false);
+        const contentArea = document.getElementById('content-area');
+        contentArea.innerHTML = html;
+        
+        // Execute scripts in the loaded HTML
+        const scripts = contentArea.getElementsByTagName('script');
+        for (let i = 0; i < scripts.length; i++) {
+          eval(scripts[i].innerText);
+        }
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+      })
+      .withFailureHandler((err) => {
+        showLoader(false);
+        alert('Gagal memuat halaman: ' + err);
+      })
+      .getPartial(viewName);
+  }
+
+  // Form Submission Helper
+  function handleFormSubmit(event, sheetName) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    // Add metadata
+    data['Timestamp'] = new Date().toISOString();
+    data['CreatedBy'] = state.user.username;
+    data['ID_Puskesmas'] = state.user.puskesmasId;
+
+    showLoader(true);
+    google.script.run
+      .withSuccessHandler((res) => {
+        showLoader(false);
+        if (res.success) {
+          alert('Data berhasil disimpan!');
+          loadView('Dashboard');
+        } else {
+          alert('Gagal menyimpan data: ' + res.error);
+        }
+      })
+      .withFailureHandler((err) => {
+        showLoader(false);
+        alert('Error: ' + err);
+      })
+      .submitDataToServer(sheetName, data);
+  }
+</script>

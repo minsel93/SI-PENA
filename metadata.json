@@ -1,0 +1,7 @@
+{
+  "name": "SI-PENA (Sistem Pelaporan Kesehatan Anak) - GAS Migration",
+  "description": "Sistem Pelaporan Kesehatan Anak (SI-PENA) dengan struktur Google Apps Script (GAS). Menggunakan Kode.gs untuk backend dan Indeks.html untuk frontend terintegrasi.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

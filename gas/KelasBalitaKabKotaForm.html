@@ -1,0 +1,61 @@
+<div class="animate-fade-in">
+  <div class="mb-8">
+    <button onclick="loadView('Dashboard')" class="text-blue-600 font-bold text-sm flex items-center gap-2 mb-4 hover:underline">
+      <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+    </button>
+    <h1 class="text-3xl font-black text-blue-900">Kelas Balita Kab/Kota</h1>
+    <p class="text-slate-500 font-medium">Rekapitulasi Kelas Balita Tingkat Kabupaten/Kota</p>
+  </div>
+
+  <div class="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+    <form onsubmit="handleFormSubmit(event, 'Kelas_Balita_Kab_Kota')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Data Wilayah</h3>
+          <div>
+            <label class="form-label">Nama Puskesmas</label>
+            <input type="text" name="Nama_Puskesmas" class="form-input" placeholder="Nama Puskesmas" required>
+          </div>
+          <div>
+            <label class="form-label">Bulan Laporan</label>
+            <select name="Bulan" class="form-input" required>
+              <option value="Januari">Januari</option>
+              <option value="Februari">Februari</option>
+              <option value="Maret">Maret</option>
+              <option value="April">April</option>
+              <option value="Mei">Mei</option>
+              <option value="Juni">Juni</option>
+              <option value="Juli">Juli</option>
+              <option value="Agustus">Agustus</option>
+              <option value="September">September</option>
+              <option value="Oktober">Oktober</option>
+              <option value="November">November</option>
+              <option value="Desember">Desember</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <h3 class="text-lg font-black text-slate-800 border-b pb-2">Statistik Rekap</h3>
+          <div>
+            <label class="form-label">Total Kelas Terlaksana</label>
+            <input type="number" name="Total_Kelas" class="form-input" placeholder="0" required>
+          </div>
+          <div>
+            <label class="form-label">Total Peserta (Ibu)</label>
+            <input type="number" name="Total_Peserta" class="form-input" placeholder="0" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-end gap-4">
+        <button type="button" onclick="loadView('Dashboard')" class="px-8 py-4 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors">
+          BATAL
+        </button>
+        <button type="submit" class="btn-primary">
+          SIMPAN REKAP
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
