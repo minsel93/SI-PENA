@@ -1,0 +1,59 @@
+<div id="template-kelasBalita">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Identitas -->
+    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Identitas Laporan</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
+          <select name="Bulan" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
+            <option value="">Pilih Bulan</option>
+            <option value="Januari">Januari</option>
+            <option value="Februari">Februari</option>
+            <option value="Maret">Maret</option>
+            <option value="April">April</option>
+            <option value="Mei">Mei</option>
+            <option value="Juni">Juni</option>
+            <option value="Juli">Juli</option>
+            <option value="Agustus">Agustus</option>
+            <option value="September">September</option>
+            <option value="Oktober">Oktober</option>
+            <option value="November">November</option>
+            <option value="Desember">Desember</option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
+          <input name="Tahun" type="number" required min="2020" max="2050" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Nama Puskesmas</label>
+          <input name="Nama_Puskesmas" type="text" required readonly class="form-control rounded-xl p-3 w-full border-2 border-slate-200 bg-slate-100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Kelas Balita -->
+    <div class="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Data Kelas Balita</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah Desa/Kelurahan</label>
+          <input name="Jumlah_Desa_Kelurahan" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Desa Menyelenggarakan Kelas Balita</label>
+          <input name="Desa_Menyelenggarakan_Kelas_Balita" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah Kelas Balita</label>
+          <input name="Jumlah_Kelas_Balita" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Ibu Balita Peserta Kelas</label>
+          <input name="Ibu_Balita_Peserta_Kelas" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

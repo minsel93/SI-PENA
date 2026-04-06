@@ -1,5 +1,5 @@
 // Ganti dengan URL Web App yang Anda dapatkan setelah deploy Google Apps Script
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7byWAls_flL2IiKZGGcyfjVODV4SHoQX8cZKi1bt-Fdzaw_hJte6Y0DFrG0oxHcZ5/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxjRtU_rg_hzQUk-4SraEQvVoT8xdzG7jcKP717EFk2dudxLGGFslaI1c_YPuqOq07Guw/exec";
 
 export const gasService = {
   async callAPI(action: string, payload: any = {}): Promise<any> {
@@ -20,6 +20,10 @@ export const gasService = {
 
   async submitData(sheetName: string, data: any) {
     return await this.callAPI('submitData', { sheetName, data });
+  },
+
+  async deleteData(sheetName: string, idData: string) {
+    return await this.callAPI('deleteData', { sheetName, idData });
   },
 
   async getRecords(sheetName: string) {

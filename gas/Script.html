@@ -1,0 +1,468 @@
+<script>
+  // Global State
+  let appState = {
+    currentUser: null,
+    isAdmin: false,
+    records: {},
+    currentView: 'dashboard',
+    editingData: null
+  };
+
+  const FORMS = [
+    { id: 'sasaran', label: 'Sasaran', icon: '<i class="fas fa-bullseye"></i>', color: 'bg-blue-500' },
+    { id: 'kegiatan', label: 'Laporan Kegiatan', icon: '<i class="fas fa-clipboard-list"></i>', color: 'bg-emerald-500' },
+    { id: 'rpjmn', label: 'RPJMN', icon: '<i class="fas fa-chart-line"></i>', color: 'bg-indigo-500' },
+    { id: 'kelasBalita', label: 'Kelas Balita', icon: '<i class="fas fa-users"></i>', color: 'bg-amber-500' },
+    { id: 'kelasBalitaKabKota', label: 'Kelas Balita Kab/Kota', icon: '<i class="fas fa-city"></i>', color: 'bg-purple-500' },
+    { id: 'kematianNeonatal', label: 'Kematian Neonatal', icon: '<i class="fas fa-baby"></i>', color: 'bg-rose-500' },
+    { id: 'kematianBalita', label: 'Kematian Balita', icon: '<i class="fas fa-child"></i>', color: 'bg-orange-500' },
+    { id: 'users', label: 'Manajemen User', icon: '<i class="fas fa-user-cog"></i>', color: 'bg-slate-700' }
+  ];
+
+  // Initialization
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem('sipena_user');
+    if (savedUser) {
+      appState.currentUser = JSON.parse(savedUser);
+      appState.isAdmin = appState.currentUser.role === 'admin';
+      showMainApp();
+      fetchInitialData();
+    }
+  });
+
+  // UI Helpers
+  function showLoading(show) {
+    document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+  }
+
+  function showNotification(message, isError = false) {
+    const notif = document.getElementById('notification');
+    const icon = document.getElementById('notif-icon');
+    const text = document.getElementById('notif-message');
+    
+    text.textContent = message;
+    if (isError) {
+      notif.classList.replace('bg-emerald-600', 'bg-rose-600');
+      icon.className = 'fas fa-exclamation-circle text-xl';
+    } else {
+      notif.classList.replace('bg-rose-600', 'bg-emerald-600');
+      icon.className = 'fas fa-check-circle text-xl';
+    }
+    
+    notif.classList.remove('hidden');
+    setTimeout(() => {
+      notif.classList.add('hidden');
+    }, 3000);
+  }
+
+  function showModal(id) {
+    document.getElementById(`modal-${id}`).classList.remove('hidden');
+  }
+
+  function hideModal(id) {
+    document.getElementById(`modal-${id}`).classList.add('hidden');
+  }
+
+  // Auth
+  function handleLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    const errDiv = document.getElementById('login-error');
+    const errText = document.getElementById('login-error-text');
+    const btn = document.getElementById('login-btn');
+    
+    errDiv.classList.add('hidden');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(res => {
+        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="fas fa-arrow-right"></i>';
+        btn.disabled = false;
+        
+        if (res.success) {
+          appState.currentUser = res.user;
+          appState.isAdmin = res.user.role === 'admin';
+          localStorage.setItem('sipena_user', JSON.stringify(res.user));
+          showMainApp();
+          fetchInitialData();
+        } else {
+          errText.textContent = res.message;
+          errDiv.classList.remove('hidden');
+        }
+      })
+      .withFailureHandler(err => {
+        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="fas fa-arrow-right"></i>';
+        btn.disabled = false;
+        errText.textContent = 'Terjadi kesalahan koneksi.';
+        errDiv.classList.remove('hidden');
+      })
+      .loginUser(u, p);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('sipena_user');
+    appState.currentUser = null;
+    appState.isAdmin = false;
+    document.getElementById('main-app').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  function showMainApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    
+    const initial = appState.currentUser.username.charAt(0).toUpperCase();
+    document.getElementById('user-avatar').textContent = initial;
+    document.getElementById('user-name-display').textContent = appState.currentUser.puskesmasName || appState.currentUser.username;
+  }
+
+  // Data Fetching
+  function fetchInitialData() {
+    showLoading(true);
+    google.script.run
+      .withSuccessHandler(data => {
+        appState.records = data;
+        showLoading(false);
+        renderDashboard();
+      })
+      .withFailureHandler(err => {
+        showLoading(false);
+        showNotification('Gagal mengambil data', true);
+      })
+      .getAllDashboardData();
+  }
+
+  // Routing
+  function navigate(view, editData = null) {
+    appState.currentView = view;
+    appState.editingData = editData;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    const content = document.getElementById('app-content');
+    content.innerHTML = '';
+    
+    if (view === 'dashboard') {
+      renderDashboard();
+    } else {
+      renderForm(view);
+    }
+  }
+
+  // Dashboard Rendering
+  function renderDashboard() {
+    const content = document.getElementById('app-content');
+    
+    // Filter records for non-admins
+    let filteredRecords = {};
+    if (appState.isAdmin) {
+      filteredRecords = appState.records;
+    } else {
+      Object.keys(appState.records).forEach(key => {
+        filteredRecords[key] = (appState.records[key] || []).filter(
+          r => r.Nama_Puskesmas === appState.currentUser.puskesmasName
+        );
+      });
+    }
+
+    // Calculate stats
+    let totalValid = 0;
+    let totalReports = 0;
+    let needsRevision = [];
+    let incomingReports = [];
+
+    Object.keys(filteredRecords).forEach(key => {
+      const list = filteredRecords[key] || [];
+      list.forEach(r => {
+        totalReports++;
+        if (r.Status_Validasi === 'Valid') totalValid++;
+        
+        r._type = key;
+        if (r.Status_Validasi === 'Belum Valid') needsRevision.push(r);
+        if (r.Status_Validasi === 'Terkirim') incomingReports.push(r);
+      });
+    });
+
+    const validPercentage = totalReports > 0 ? Math.round((totalValid / totalReports) * 100) : 0;
+
+    let html = `
+      <div class="space-y-12">
+        <!-- Hero Section -->
+        <section class="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl bg-slate-900">
+          <img src="https://i.ibb.co.com/twq32zLZ/Gemini-Generated-Image-p2pquvp2pquvp2pq.jpg" class="w-full h-full object-cover opacity-50" alt="Hero">
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+            <h2 class="text-white text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">SI-PENA</h2>
+            <p class="text-slate-200 text-xl font-medium drop-shadow-md">Sistem Pelaporan Kesehatan Anak</p>
+          </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Total Laporan</h3>
+            <p class="text-4xl font-black text-slate-800">${totalReports}</p>
+          </div>
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Laporan Valid</h3>
+            <p class="text-4xl font-black text-emerald-600">${totalValid}</p>
+          </div>
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
+            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Persentase Validasi</h3>
+            <p class="text-4xl font-black text-blue-600">${validPercentage}%</p>
+          </div>
+        </section>
+    `;
+
+    // Admin Incoming Reports
+    if (appState.isAdmin && incomingReports.length > 0) {
+      html += `
+        <section class="animate-fade-in">
+          <div class="mb-6 flex items-center gap-3">
+            <div class="w-2 h-8 bg-emerald-500 rounded-full"></div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">Laporan Masuk (Perlu Validasi)</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${incomingReports.map(r => `
+              <div class="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl flex justify-between items-center shadow-sm">
+                <div>
+                  <h4 class="font-bold text-slate-900">${getFormLabel(r._type)}</h4>
+                  <p class="text-xs text-slate-500 font-bold uppercase">${r.Nama_Puskesmas} • ${r.Bulan} ${r.Tahun}</p>
+                </div>
+                <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;')})" class="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-emerald-200">VALIDASI</button>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    // Needs Revision
+    if (needsRevision.length > 0) {
+      html += `
+        <section class="animate-fade-in">
+          <div class="mb-6 flex items-center gap-3">
+            <div class="w-2 h-8 bg-rose-500 rounded-full"></div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">Laporan Perlu Perbaikan</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${needsRevision.map(r => `
+              <div class="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex justify-between items-center shadow-sm">
+                <div>
+                  <h4 class="font-bold text-slate-900">${getFormLabel(r._type)}</h4>
+                  <p class="text-xs text-slate-500 font-bold uppercase">${r.Bulan} ${r.Tahun}</p>
+                  <p class="text-sm text-rose-600 mt-1 italic">"${r.Catatan_Validasi || ''}"</p>
+                </div>
+                <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;')})" class="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-rose-200">PERBAIKI</button>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    // Forms Grid
+    html += `
+        <section>
+          <div class="mb-8 flex items-center justify-between">
+              <h3 class="text-2xl font-black text-slate-900 tracking-tight">Navigasi Pelaporan</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            ${FORMS.filter(f => appState.isAdmin || f.id !== 'users').map(f => `
+              <div onclick="navigate('${f.id}')" class="form-card bg-white p-6 cursor-pointer group">
+                <div class="${f.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+                  ${f.icon}
+                </div>
+                <h4 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-emerald-600 transition-colors">${f.label}</h4>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      </div>
+    `;
+
+    content.innerHTML = html;
+  }
+
+  function getFormLabel(id) {
+    const form = FORMS.find(f => f.id === id);
+    return form ? form.label : id;
+  }
+
+  // Form Rendering
+  function renderForm(formId) {
+    const content = document.getElementById('app-content');
+    const formDef = FORMS.find(f => f.id === formId);
+    
+    let html = `
+      <div class="max-w-5xl mx-auto">
+        <button onclick="navigate('dashboard')" class="mb-8 flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors">
+            <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+        </button>
+        
+        <div class="bg-white rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
+          <div class="bg-slate-900 p-12 text-white relative overflow-hidden">
+            <div class="relative z-10">
+              <h2 class="text-4xl font-black tracking-tight mb-2">Formulir ${formDef.label}</h2>
+            </div>
+          </div>
+          
+          <form id="data-form" onsubmit="submitForm(event, '${formId}')" class="p-10">
+            <div id="form-fields-container"></div>
+            
+            <div class="col-span-1 md:col-span-2 bg-slate-50 p-8 rounded-3xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+              <div class="space-y-4">
+                <h4 class="text-slate-900 font-black uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+                  <i class="fas fa-user-edit text-blue-600"></i> Petugas Penginput
+                </h4>
+                ${renderInput('Nama_Petugas_Penginput', 'Nama Petugas', 'text', '', !appState.isAdmin)}
+                ${renderInput('Tanggal_Input', 'Tanggal Input', 'date')}
+              </div>
+              <div class="space-y-4">
+                <h4 class="text-slate-900 font-black uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+                  <i class="fas fa-clipboard-check text-emerald-600"></i> Status Validasi
+                </h4>
+                ${appState.isAdmin ? `
+                  ${renderSelect('Status_Validasi', 'Status Validasi', ['Draft', 'Terkirim', 'Valid', 'Belum Valid'])}
+                  <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Catatan Validasi</label>
+                    <textarea name="Catatan_Validasi" class="form-control rounded-xl p-3 border-2 border-slate-200 w-full" rows="2"></textarea>
+                  </div>
+                ` : `
+                  <div class="p-4 bg-white rounded-2xl border border-slate-200">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Status Saat Ini:</p>
+                    <p class="font-black" id="status-display">Draft</p>
+                    <p id="catatan-display" class="text-sm text-rose-600 italic mt-2"></p>
+                  </div>
+                  <input type="hidden" name="Status_Validasi" value="Terkirim">
+                `}
+              </div>
+            </div>
+            
+            <div class="mt-10 flex justify-end gap-4">
+              <button type="button" onclick="navigate('dashboard')" class="px-8 py-4 rounded-2xl text-slate-600 font-black text-sm hover:bg-slate-50 transition-all">BATALKAN</button>
+              <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-xl transition-all">KIRIM LAPORAN</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    content.innerHTML = html;
+    
+    // Load specific form fields from template
+    const templateContent = document.getElementById(`template-${formId}`);
+    if (templateContent) {
+      document.getElementById('form-fields-container').innerHTML = templateContent.innerHTML;
+    } else {
+      document.getElementById('form-fields-container').innerHTML = '<p>Form template not found.</p>';
+    }
+
+    // Populate data if editing
+    populateFormData();
+  }
+
+  function renderInput(name, label, type = 'text', placeholder = '', readOnly = false) {
+    return `
+      <div class="space-y-1">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">${label}</label>
+        <input name="${name}" type="${type}" placeholder="${placeholder}" ${readOnly ? 'readonly' : 'required'} class="form-control rounded-xl p-3 w-full border-2 border-slate-200 ${readOnly ? 'bg-slate-100' : ''}">
+      </div>
+    `;
+  }
+
+  function renderSelect(name, label, options) {
+    return `
+      <div class="space-y-1">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">${label}</label>
+        <select name="${name}" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
+          <option value="">Pilih ${label}</option>
+          ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }
+
+  function populateFormData() {
+    const form = document.getElementById('data-form');
+    if (!form) return;
+
+    // Default values
+    const defaults = {
+      Tanggal_Input: new Date().toISOString().split('T')[0],
+      Nama_Puskesmas: appState.isAdmin ? '' : appState.currentUser.puskesmasName,
+      Id_Puskesmas: appState.isAdmin ? '' : appState.currentUser.puskesmasId,
+      Nama_Petugas_Penginput: appState.isAdmin ? '' : appState.currentUser.username
+    };
+
+    const data = appState.editingData || defaults;
+
+    Object.keys(data).forEach(key => {
+      const input = form.elements[key];
+      if (input) {
+        input.value = data[key];
+      }
+    });
+
+    if (!appState.isAdmin && appState.editingData) {
+      const statusDisp = document.getElementById('status-display');
+      const catDisp = document.getElementById('catatan-display');
+      if (statusDisp) statusDisp.textContent = data.Status_Validasi || 'Draft';
+      if (catDisp && data.Catatan_Validasi) catDisp.textContent = `"${data.Catatan_Validasi}"`;
+    }
+    
+    // Add Id_Data hidden field if editing
+    if (appState.editingData && appState.editingData.Id_Data) {
+      const hiddenId = document.createElement('input');
+      hiddenId.type = 'hidden';
+      hiddenId.name = 'Id_Data';
+      hiddenId.value = appState.editingData.Id_Data;
+      form.appendChild(hiddenId);
+    }
+  }
+
+  function submitForm(e, formId) {
+    e.preventDefault();
+    showLoading(true);
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const dataObj = {};
+    
+    formData.forEach((value, key) => {
+      // Convert numbers
+      if (value !== '' && !isNaN(value) && key !== 'Id_Puskesmas' && key !== 'Nama_Puskesmas' && key !== 'Bulan' && key !== 'Tahun') {
+        dataObj[key] = Number(value);
+      } else {
+        dataObj[key] = value;
+      }
+    });
+
+    // Map sheet name
+    let sheetName = FORMS.find(f => f.id === formId).label.replace(/ /g, '_');
+    if (formId === 'users') sheetName = 'Users';
+    if (formId === 'sasaran') sheetName = 'Sasaran';
+    if (formId === 'kegiatan') sheetName = 'Kegiatan';
+    if (formId === 'rpjmn') sheetName = 'RPJMN';
+    if (formId === 'kelasBalita') sheetName = 'Kelas_Balita';
+    if (formId === 'kelasBalitaKabKota') sheetName = 'Kelas_Balita_KabKota';
+    if (formId === 'kematianNeonatal') sheetName = 'Kematian_Neonatal';
+    if (formId === 'kematianBalita') sheetName = 'Kematian_Balita';
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res.success) {
+          showNotification('Data berhasil disimpan');
+          fetchInitialData(); // Will route back to dashboard
+        } else {
+          showLoading(false);
+          showNotification(res.message, true);
+        }
+      })
+      .withFailureHandler(err => {
+        showLoading(false);
+        showNotification('Gagal menyimpan data', true);
+      })
+      .submitData(sheetName, dataObj);
+  }
+</script>

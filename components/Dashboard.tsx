@@ -44,10 +44,11 @@ const sliderImages = [
 
 const Dashboard: React.FC<{ 
   onNavigate: (id: FormType, editingData?: { type: FormType, data: any }) => void,
+  onDelete?: (type: FormType, idData: string) => void,
   records: any,
   isAdmin?: boolean,
   currentUser?: User | null
-}> = ({ onNavigate, records, isAdmin, currentUser }) => {
+}> = ({ onNavigate, onDelete, records, isAdmin, currentUser }) => {
   const [time, setTime] = useState(new Date());
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -307,12 +308,23 @@ const Dashboard: React.FC<{
                     <p className="text-sm text-emerald-600 font-medium mt-1">Menunggu validasi admin</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => onNavigate(report._type, { type: report._type, data: report })}
-                  className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200"
-                >
-                  VALIDASI
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => onNavigate(report._type, { type: report._type, data: report })}
+                    className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-emerald-600 hover:text-white transition-all border border-emerald-200"
+                  >
+                    VALIDASI
+                  </button>
+                  {onDelete && (
+                    <button 
+                      onClick={() => onDelete(report._type, report.Id_Data)}
+                      className="bg-white text-rose-600 px-3 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-200"
+                      title="Hapus Data"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -339,17 +351,97 @@ const Dashboard: React.FC<{
                     <p className="text-sm text-rose-600 font-medium mt-1 italic">"{report.Catatan_Validasi || 'Data perlu diperiksa kembali'}"</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => onNavigate(report._type, { type: report._type, data: report })}
-                  className="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-200"
-                >
-                  PERBAIKI
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => onNavigate(report._type, { type: report._type, data: report })}
+                    className="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-200"
+                  >
+                    PERBAIKI
+                  </button>
+                  {onDelete && isAdmin && (
+                    <button 
+                      onClick={() => onDelete(report._type, report.Id_Data)}
+                      className="bg-white text-rose-600 px-3 py-2.5 rounded-xl text-sm font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-200"
+                      title="Hapus Data"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </section>
       )}
+
+      {/* Riwayat Laporan Section */}
+      <section className="animate-fade-in">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight">Riwayat Laporan</h3>
+        </div>
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="p-4 font-bold">Jenis Laporan</th>
+                  <th className="p-4 font-bold">Puskesmas</th>
+                  <th className="p-4 font-bold">Periode</th>
+                  <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(records).flatMap(([key, list]: [string, any]) => {
+                  let typeStr = key.toUpperCase();
+                  if (typeStr === 'USERS') typeStr = 'USER';
+                  const type = ('FORM_' + typeStr) as FormType;
+                  return (list || []).map((r: any) => ({ ...r, _type: type }));
+                }).sort((a, b) => new Date(b.Tanggal_Input).getTime() - new Date(a.Tanggal_Input).getTime())
+                  .slice(0, 10) // Show only latest 10 for performance
+                  .map((report, idx) => (
+                  <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="p-4 font-bold text-slate-800">{NAVIGATION_MENU.find(m => m.id === report._type)?.label}</td>
+                    <td className="p-4 text-slate-600">{report.Nama_Puskesmas}</td>
+                    <td className="p-4 text-slate-600">{report.Bulan} {report.Tahun}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        report.Status_Validasi === 'Valid' ? 'bg-emerald-100 text-emerald-700' :
+                        report.Status_Validasi === 'Belum Valid' ? 'bg-rose-100 text-rose-700' :
+                        report.Status_Validasi === 'Terkirim' ? 'bg-blue-100 text-blue-700' :
+                        'bg-slate-100 text-slate-600'
+                      }`}>
+                        {report.Status_Validasi || 'Draft'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => onNavigate(report._type, { type: report._type, data: report })}
+                          className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600 flex items-center justify-center transition-colors"
+                          title="Lihat / Edit"
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        {onDelete && (isAdmin || report.Status_Validasi !== 'Valid') && (
+                          <button 
+                            onClick={() => onDelete(report._type, report.Id_Data)}
+                            className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center transition-colors"
+                            title="Hapus"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
       {/* Form Navigation Grid */}
       <section>

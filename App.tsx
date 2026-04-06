@@ -132,6 +132,32 @@ const App: React.FC = () => {
     setTimeout(() => setState(prev => ({ ...prev, notification: null })), 3000);
   };
 
+  const handleDeleteData = async (formType: FormType, idData: string) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+    
+    setState(prev => ({ ...prev, isLoading: true }));
+    try {
+      let sheetName = formType.toLowerCase().replace('form_', '') as string;
+      if (sheetName === 'user') sheetName = 'users';
+
+      await gasService.deleteData(sheetName, idData);
+      await fetchInitialData();
+
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        notification: { message: 'Data berhasil dihapus!', type: 'success' }
+      }));
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        notification: { message: 'Gagal menghapus data.', type: 'error' }
+      }));
+    }
+    setTimeout(() => setState(prev => ({ ...prev, notification: null })), 3000);
+  };
+
   if (!state.isAuthenticated) {
     return <Login onLogin={handleLogin} />;
   }
@@ -185,6 +211,7 @@ const App: React.FC = () => {
         {state.currentForm === FormType.DASHBOARD ? (
           <Dashboard 
             onNavigate={handleNavigation} 
+            onDelete={handleDeleteData}
             records={state.isAdmin ? state.records : Object.keys(state.records).reduce((acc: any, key) => {
               acc[key] = (state.records[key as keyof typeof state.records] as any[]).filter(
                 (r: any) => r.Nama_Puskesmas === state.currentUser?.puskesmasName
