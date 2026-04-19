@@ -3,56 +3,145 @@
   let appState = {
     currentUser: null,
     isAdmin: false,
-    records: {},
+    records: null, // Changed from {} to null to distinguish between "not loaded" and "empty"
     currentView: 'dashboard',
-    editingData: null
+    editingData: null,
+    sliderInterval: null,
+    clockInterval: null,
+    charts: { pie: null, bar: null, line: null }
   };
 
   const FORMS = [
-    { id: 'sasaran', label: 'Sasaran', icon: '<i class="fas fa-bullseye"></i>', color: 'bg-blue-500' },
-    { id: 'kegiatan', label: 'Laporan Kegiatan', icon: '<i class="fas fa-clipboard-list"></i>', color: 'bg-emerald-500' },
-    { id: 'rpjmn', label: 'RPJMN', icon: '<i class="fas fa-chart-line"></i>', color: 'bg-indigo-500' },
-    { id: 'kelasBalita', label: 'Kelas Balita', icon: '<i class="fas fa-users"></i>', color: 'bg-amber-500' },
-    { id: 'kelasBalitaKabKota', label: 'Kelas Balita Kab/Kota', icon: '<i class="fas fa-city"></i>', color: 'bg-purple-500' },
-    { id: 'kematianNeonatal', label: 'Kematian Neonatal', icon: '<i class="fas fa-baby"></i>', color: 'bg-rose-500' },
-    { id: 'kematianBalita', label: 'Kematian Balita', icon: '<i class="fas fa-child"></i>', color: 'bg-orange-500' },
-    { id: 'users', label: 'Manajemen User', icon: '<i class="fas fa-user-cog"></i>', color: 'bg-slate-700' }
+    { id: 'sasaran', label: 'Sasaran', icon: '<i class="bi bi-bullseye"></i>', color: 'bg-indigo-600', desc: 'Dataset sasaran indikator utama kesehatan anak' },
+    { id: 'kegiatan', label: 'Laporan Kegiatan', icon: '<i class="bi bi-clipboard-pulse"></i>', color: 'bg-emerald-600', desc: 'Pelayanan kesehatan neonatal, bayi, dan balita' },
+    { id: 'rpjmn', label: 'RPJMN', icon: '<i class="bi bi-graph-up-arrow"></i>', color: 'bg-blue-600', desc: 'Pemantauan perkembangan dan target RPJMN' },
+    { id: 'kelasBalita', label: 'Kelas Balita', icon: '<i class="bi bi-people-fill"></i>', color: 'bg-amber-600', desc: 'Pencatatan partisipasi kelas ibu balita' },
+    { id: 'kelasBalitaKabKota', label: 'Kelas Balita Kab/Kota', icon: '<i class="bi bi-building-check"></i>', color: 'bg-purple-600', desc: 'Statistik pelaksanaan kelas balita per wilayah' },
+    { id: 'kematianNeonatal', label: 'Kematian Neonatal', icon: '<i class="bi bi-virus"></i>', color: 'bg-rose-600', desc: 'Data kematian bayi usia 0-28 hari' },
+    { id: 'kematianBalita', label: 'Kematian Balita', icon: '<i class="bi bi-activity"></i>', color: 'bg-orange-600', desc: 'Data kematian anak balita usia 0-59 bulan' },
+    { id: 'users', label: 'Manajemen User', icon: '<i class="bi bi-person-lock"></i>', color: 'bg-slate-800', desc: 'Pengaturan hak akses dan akun puskesmas' }
   ];
 
+  const FORM_DEFINITIONS = FORMS.reduce((acc, form) => {
+    acc[form.id] = form;
+    return acc;
+  }, {});
+
+  const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
   // Initialization
+  window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Global Error:', msg, 'at', lineNo, ':', columnNo, error);
+    if (typeof showNotification === 'function') {
+      showNotification('Terjadi kesalahan sistem: ' + msg, true);
+    }
+    return false;
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
-    const savedUser = localStorage.getItem('sipena_user');
-    if (savedUser) {
-      appState.currentUser = JSON.parse(savedUser);
-      appState.isAdmin = appState.currentUser.role === 'admin';
-      showMainApp();
-      fetchInitialData();
+    console.log('SI-PENA: DOMContentLoaded fired');
+    try {
+      loadTheme();
+      const savedUser = localStorage.getItem('sipena_user');
+      console.log('SI-PENA: User session check:', savedUser ? 'Found' : 'Not found');
+      
+      if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
+        const user = JSON.parse(savedUser);
+        if (user && user.username) {
+          appState.currentUser = user;
+          appState.isAdmin = user.role === 'admin';
+          showMainApp();
+        } else {
+          showLogin();
+        }
+      } else {
+        showLogin();
+      }
+    } catch (e) {
+      console.error('SI-PENA Boot Error:', e);
+      localStorage.removeItem('sipena_user');
+      showLogin();
     }
   });
 
   // UI Helpers
-  function showLoading(show) {
-    document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+  function loadTheme() {
+    const theme = localStorage.getItem('sipena_theme') || 'light';
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      updateThemeIcons(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      updateThemeIcons(false);
+    }
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('sipena_theme', isDark ? 'dark' : 'light');
+    updateThemeIcons(isDark);
+  }
+
+  function updateThemeIcons(isDark) {
+    const icon = document.getElementById('theme-icon');
+    const mobileIcon = document.getElementById('theme-icon-mobile');
+    const classStr = isDark ? 'bi bi-sun-fill text-yellow-400' : 'bi bi-moon-stars';
+    
+    if (icon) icon.className = classStr + ' text-lg group-hover:scale-110 transition-transform';
+    if (mobileIcon) mobileIcon.className = classStr + ' text-xl';
+  }
+
+  function showLogin() {
+    console.log('SI-PENA: Switching to login screen');
+    const loginScreen = document.getElementById('login-screen');
+    const mainApp = document.getElementById('main-app');
+    const loading = document.getElementById('loading-overlay');
+    
+    if (loading) loading.classList.add('hidden');
+    if (mainApp) {
+      mainApp.classList.add('hidden');
+      mainApp.style.display = 'none';
+    }
+    if (loginScreen) {
+      loginScreen.classList.remove('hidden');
+      loginScreen.style.display = 'flex';
+      loginScreen.style.zIndex = '100';
+      loginScreen.style.opacity = '1';
+      loginScreen.style.visibility = 'visible';
+    }
+  }
+
+  function showLoading(show, message = 'Memproses Data...') {
+    const overlay = document.getElementById('loading-overlay');
+    const msgEl = overlay.querySelector('p');
+    if (msgEl) msgEl.textContent = message;
+    overlay.classList.toggle('hidden', !show);
   }
 
   function showNotification(message, isError = false) {
-    const notif = document.getElementById('notification');
-    const icon = document.getElementById('notif-icon');
-    const text = document.getElementById('notif-message');
+    const container = document.getElementById('notification-container');
+    const notification = document.createElement('div');
+    const type = isError ? 'error' : 'success';
+    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+    const colorClass = type === 'success' ? 'bg-emerald-500 border-emerald-400 shadow-emerald-200' : 'bg-rose-500 border-rose-400 shadow-rose-200';
     
-    text.textContent = message;
-    if (isError) {
-      notif.classList.replace('bg-emerald-600', 'bg-rose-600');
-      icon.className = 'fas fa-exclamation-circle text-xl';
-    } else {
-      notif.classList.replace('bg-rose-600', 'bg-emerald-600');
-      icon.className = 'fas fa-check-circle text-xl';
-    }
+    notification.className = `${colorClass} text-white px-8 py-5 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-in border-b-4 relative overflow-hidden mb-4 pointer-events-auto`;
+    notification.innerHTML = `
+      <div class="absolute inset-0 bg-white/10 opacity-20 pointer-events-none"></div>
+      <div class="relative z-10 w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">
+        <i class="bi ${icon}"></i>
+      </div>
+      <div class="relative z-10">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-0.5">${type === 'success' ? 'Berhasil' : 'Perhatian'}</p>
+        <p class="font-black text-sm tracking-tight">${message}</p>
+      </div>
+    `;
     
-    notif.classList.remove('hidden');
+    container.appendChild(notification);
     setTimeout(() => {
-      notif.classList.add('hidden');
-    }, 3000);
+      notification.classList.add('animate-slide-out');
+      setTimeout(() => notification.remove(), 500);
+    }, 4500);
   }
 
   function showModal(id) {
@@ -73,27 +162,34 @@
     const btn = document.getElementById('login-btn');
     
     errDiv.classList.add('hidden');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Memproses...';
     btn.disabled = true;
 
     google.script.run
       .withSuccessHandler(res => {
-        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="fas fa-arrow-right"></i>';
+        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="bi bi-arrow-right"></i>';
         btn.disabled = false;
         
         if (res.success) {
           appState.currentUser = res.user;
           appState.isAdmin = res.user.role === 'admin';
-          localStorage.setItem('sipena_user', JSON.stringify(res.user));
-          showMainApp();
-          fetchInitialData();
+          try {
+            localStorage.setItem('sipena_user', JSON.stringify(res.user));
+          } catch (e) {
+            console.error('Error saving session:', e);
+          }
+          
+          // Smoother transition for GAS
+          setTimeout(() => {
+            showMainApp();
+          }, 100);
         } else {
           errText.textContent = res.message;
           errDiv.classList.remove('hidden');
         }
       })
       .withFailureHandler(err => {
-        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="fas fa-arrow-right"></i>';
+        btn.innerHTML = '<span>MASUK APLIKASI</span><i class="bi bi-arrow-right"></i>';
         btn.disabled = false;
         errText.textContent = 'Terjadi kesalahan koneksi.';
         errDiv.classList.remove('hidden');
@@ -102,75 +198,232 @@
   }
 
   function handleLogout() {
-    localStorage.removeItem('sipena_user');
-    appState.currentUser = null;
-    appState.isAdmin = false;
-    document.getElementById('main-app').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
+    try {
+      cleanupDashboard();
+      localStorage.removeItem('sipena_user');
+      appState.currentUser = null;
+      appState.isAdmin = false;
+      appState.records = null; // Clear records for security
+      
+      const loginScreen = document.getElementById('login-screen');
+      const mainApp = document.getElementById('main-app');
+      const content = document.getElementById('app-content');
+      
+      if (mainApp) {
+        mainApp.classList.add('hidden');
+        mainApp.style.display = 'none';
+      }
+      if (loginScreen) {
+        loginScreen.classList.remove('hidden');
+        loginScreen.style.display = 'flex';
+      }
+      if (content) content.innerHTML = '';
+      
+      // Close mobile sidebar if open
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (sidebar) sidebar.classList.add('-translate-x-full');
+      if (overlay) overlay.classList.add('hidden');
+      
+      showNotification('Berhasil keluar sistem');
+    } catch (e) {
+      console.error('Logout error:', e);
+      // Fallback redirect or reload
+      window.location.reload();
+    }
   }
 
   function showMainApp() {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('main-app').classList.remove('hidden');
+    console.log('Showing main app interface...');
+    const loginScreen = document.getElementById('login-screen');
+    const mainApp = document.getElementById('main-app');
     
-    const initial = appState.currentUser.username.charAt(0).toUpperCase();
-    document.getElementById('user-avatar').textContent = initial;
-    document.getElementById('user-name-display').textContent = appState.currentUser.puskesmasName || appState.currentUser.username;
+    // Safety check for user state
+    if (!appState.currentUser) {
+      console.warn('currentUser is null in showMainApp, redirecting to login.');
+      showLogin();
+      return;
+    }
+
+    // Unhide main containers
+    if (loginScreen) {
+      loginScreen.classList.add('hidden');
+      loginScreen.style.display = 'none';
+      loginScreen.style.zIndex = '-1';
+    }
+    
+    if (mainApp) {
+      mainApp.classList.remove('hidden');
+      mainApp.style.display = 'flex';
+      mainApp.style.visibility = 'visible';
+      mainApp.style.opacity = '1';
+    }
+
+    // Refresh UI elements
+    const initial = (appState.currentUser.username || 'U').charAt(0).toUpperCase();
+    const avatar = document.getElementById('user-avatar');
+    const nameDisplay = document.getElementById('user-name-display');
+    const mobileNameDisplay = document.getElementById('mobile-user-name');
+    
+    if (avatar) avatar.textContent = initial;
+    const name = appState.currentUser.puskesmasName || appState.currentUser.username;
+    if (nameDisplay) nameDisplay.textContent = name;
+    if (mobileNameDisplay) mobileNameDisplay.textContent = name;
+    
+    // Set initial view and fetch data
+    navigate(appState.currentView || 'dashboard');
+    fetchInitialData();
   }
 
   // Data Fetching
   function fetchInitialData() {
-    showLoading(true);
+    const content = document.getElementById('app-content');
+    if (!content.innerHTML || content.innerHTML.trim() === '') {
+      showLoading(true);
+    }
+    
     google.script.run
       .withSuccessHandler(data => {
-        appState.records = data;
+        appState.records = data || {};
         showLoading(false);
-        renderDashboard();
+        
+        // Update user name displays
+        const name = appState.currentUser.puskesmasName || appState.currentUser.username;
+        const nameDisp = document.getElementById('user-name-display');
+        const mobileNameDisp = document.getElementById('mobile-user-name');
+        if (nameDisp) nameDisp.textContent = name;
+        if (mobileNameDisp) mobileNameDisp.textContent = name;
+
+        renderDashboard(); // Always refresh dashboard on data arrival
       })
       .withFailureHandler(err => {
+        console.error('Data fetch error:', err);
         showLoading(false);
-        showNotification('Gagal mengambil data', true);
+        appState.records = appState.records || {};
+        showNotification('Gagal mengambil data dari server. Silakan muat ulang.', true);
+        renderDashboard();
       })
-      .getAllDashboardData();
+      .getAllDashboardData(appState.currentUser);
   }
 
   // Routing
   function navigate(view, editData = null) {
-    appState.currentView = view;
-    appState.editingData = editData;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    const content = document.getElementById('app-content');
-    content.innerHTML = '';
-    
-    if (view === 'dashboard') {
-      renderDashboard();
-    } else {
-      renderForm(view);
+    try {
+      cleanupDashboard();
+      appState.currentView = view;
+      appState.editingData = editData;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      const content = document.getElementById('app-content');
+      if (!content) return;
+      
+      content.innerHTML = '';
+      
+      // Update active state in sidebar
+      const navLinks = document.querySelectorAll('.nav-link-custom');
+      if (navLinks) {
+        navLinks.forEach(link => {
+          if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${view}'`)) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      }
+      
+      if (view === 'dashboard') {
+        renderDashboard();
+      } else {
+        renderForm(view);
+      }
+    } catch (e) {
+      console.error('Navigation error:', e);
     }
   }
 
   // Dashboard Rendering
-  function renderDashboard() {
-    const content = document.getElementById('app-content');
-    
-    // Filter records for non-admins
-    let filteredRecords = {};
-    if (appState.isAdmin) {
-      filteredRecords = appState.records;
-    } else {
-      Object.keys(appState.records).forEach(key => {
-        filteredRecords[key] = (appState.records[key] || []).filter(
-          r => r.Nama_Puskesmas === appState.currentUser.puskesmasName
-        );
-      });
+  function cleanupDashboard() {
+    if (appState.sliderInterval) {
+      clearInterval(appState.sliderInterval);
+      appState.sliderInterval = null;
     }
+    if (appState.clockInterval) {
+      clearInterval(appState.clockInterval);
+      appState.clockInterval = null;
+    }
+    // Destroy charts
+    if (appState.charts) {
+      Object.keys(appState.charts).forEach(key => {
+        if (appState.charts[key]) {
+          appState.charts[key].destroy();
+          appState.charts[key] = null;
+        }
+      });
+    } else {
+      appState.charts = { pie: null, bar: null, line: null };
+    }
+  }
+
+  const SLIDER_IMAGES = [
+    { url: "https://i.ibb.co.com/S4Vg2Tf4/unnamed-5.jpg", title: "Child Health", desc: "Track, Analyze, and improve outcomes" },
+    { url: "https://i.ibb.co.com/pj1gMW1g/Desain-tanpa-judul-6.png", title: "SI-PENA", desc: "Sistem Pelaporan Kesehatan Anak" },
+    { url: "https://i.ibb.co.com/twq32zLZ/Gemini-Generated-Image-p2pquvp2pquvp2pq.jpg", title: "Digitalisasi Data Anak", desc: "Pelaporan Kesehatan yang Cepat, Akurat dan Transparan" }
+  ];
+
+  function renderDashboard() {
+    try {
+      cleanupDashboard();
+      const content = document.getElementById('app-content');
+      if (!content) return;
+
+      if (!appState.currentUser) {
+        handleLogout();
+        return;
+      }
+
+      const records = appState.records;
+      if (records === null) {
+        content.innerHTML = `
+          <div class="p-20 text-center animate-fade-in flex flex-col items-center justify-center min-h-[400px]">
+            <div class="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-8 text-4xl animate-pulse">
+              <i class="bi bi-cloud-download"></i>
+            </div>
+            <h3 class="text-3xl font-black text-slate-900 mb-3 tracking-tight">Menghubungkan ke Server</h3>
+            <p class="text-slate-500 max-w-sm mx-auto font-medium mb-8">Mohon tunggu sebentar, SI-PENA sedang mengambil data terbaru untuk Anda.</p>
+            <button onclick="fetchInitialData()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+              <i class="bi bi-arrow-clockwise"></i> Ambil Ulang Data
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      // Filter records for current user
+      let filteredRecords = {};
+      
+      Object.keys(records).forEach(key => {
+        filteredRecords[key] = (records[key] || []).filter(r => {
+          if (appState.isAdmin) return true;
+          
+          const rowPkmName = (r.Nama_Puskesmas || r['Nama Puskesmas'] || '').toString().toLowerCase().trim();
+          const rowPkmId = (r.Id_Puskesmas || r.ID_Puskesmas || '').toString().trim();
+          const userPkmName = (appState.currentUser.puskesmasName || '').toLowerCase().trim();
+          const userPkmId = (appState.currentUser.puskesmasId || '').trim();
+          
+          return (userPkmId && rowPkmId === userPkmId) || (userPkmName && rowPkmName === userPkmName);
+        });
+      });
 
     // Calculate stats
     let totalValid = 0;
     let totalReports = 0;
     let needsRevision = [];
     let incomingReports = [];
+    let allReports = [];
+
+    const monthlyStats = Array(12).fill(0);
+    const deathTrends = Array(12).fill(0).map(() => ({ neonatal: 0, balita: 0 }));
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
     Object.keys(filteredRecords).forEach(key => {
       const list = filteredRecords[key] || [];
@@ -179,37 +432,184 @@
         if (r.Status_Validasi === 'Valid') totalValid++;
         
         r._type = key;
+        allReports.push(r);
         if (r.Status_Validasi === 'Belum Valid') needsRevision.push(r);
         if (r.Status_Validasi === 'Terkirim') incomingReports.push(r);
+
+        // Use flexible key lookup for month/year
+        const monthStr = (r.Bulan || r.bulan || r.MONTH || '').toString().trim();
+        const mIdx = months.findIndex(m => m.toLowerCase() === monthStr.toLowerCase());
+        if (mIdx !== -1) {
+          monthlyStats[mIdx]++;
+          if (key === 'kematianNeonatal') {
+            deathTrends[mIdx].neonatal += (Number(r.Jumlah_Kematian_Neonatal) || 0);
+          }
+          if (key === 'kematianBalita') {
+            deathTrends[mIdx].balita += (Number(r.Kematian_Balita_0_59_Bln) || 0);
+          }
+        }
       });
     });
 
     const validPercentage = totalReports > 0 ? Math.round((totalValid / totalReports) * 100) : 0;
 
     let html = `
-      <div class="space-y-12">
-        <!-- Hero Section -->
-        <section class="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl bg-slate-900">
-          <img src="https://i.ibb.co.com/twq32zLZ/Gemini-Generated-Image-p2pquvp2pquvp2pq.jpg" class="w-full h-full object-cover opacity-50" alt="Hero">
-          <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-            <h2 class="text-white text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">SI-PENA</h2>
-            <p class="text-slate-200 text-xl font-medium drop-shadow-md">Sistem Pelaporan Kesehatan Anak</p>
+      <div class="space-y-12 pb-12">
+        <!-- Hero Slider Section -->
+        <section class="relative h-[350px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-slate-900" id="hero-slider">
+          ${SLIDER_IMAGES.map((img, idx) => `
+            <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === 0 ? 'opacity-100' : 'opacity-0'}" id="slide-${idx}">
+              <img src="${img.url}" class="w-full h-full object-cover object-center" alt="Hero">
+              <div class="absolute inset-0 bg-black/40 hero-gradient-overlay flex flex-col items-center justify-center text-center p-6">
+                <h2 class="text-white text-3xl md:text-6xl font-extrabold mb-4 animate-fade-in-up drop-shadow-lg">${img.title}</h2>
+                <p class="text-slate-100 text-lg md:text-2xl font-medium max-w-2xl drop-shadow-md">${img.desc}</p>
+              </div>
+            </div>
+          `).join('')}
+          
+          <!-- Floating Greeting & Clock Widget -->
+          <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row justify-between items-end md:items-center bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl">
+            <div>
+              <h3 class="text-white text-2xl font-bold flex items-center gap-2" id="greeting-text">
+                Selamat Datang, ${appState.currentUser.puskesmasName || appState.currentUser.username}
+              </h3>
+              <p class="text-slate-200 font-medium" id="date-text"></p>
+            </div>
+            <div class="text-white text-5xl font-mono font-bold tracking-widest mt-4 md:mt-0" id="clock-text"></div>
           </div>
         </section>
 
-        <!-- Stats -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
-            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Total Laporan</h3>
-            <p class="text-4xl font-black text-slate-800">${totalReports}</p>
+        <!-- Monitoring Overview (Stat Cards) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-indigo-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-100 dark:shadow-none">
+                <i class="bi bi-files"></i>
+              </div>
+              <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Total Laporan</p>
+                <h4 class="text-2xl font-black text-slate-800 dark:text-slate-100">${totalReports}</h4>
+              </div>
+            </div>
           </div>
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
-            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Laporan Valid</h3>
-            <p class="text-4xl font-black text-emerald-600">${totalValid}</p>
+          
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-100 dark:shadow-none">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Rate Validasi</p>
+                <h4 class="text-2xl font-black text-slate-800 dark:text-slate-100">${validPercentage}%</h4>
+              </div>
+            </div>
           </div>
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center">
-            <h3 class="text-slate-500 font-bold uppercase text-xs tracking-widest mb-2">Persentase Validasi</h3>
-            <p class="text-4xl font-black text-blue-600">${validPercentage}%</p>
+
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-100 dark:shadow-none">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Data Terkirim</p>
+                <h4 class="text-2xl font-black text-slate-800 dark:text-slate-100">${incomingReports.length}</h4>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-rose-100 dark:shadow-none">
+                <i class="bi bi-exclamation-triangle"></i>
+              </div>
+              <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Perlu Perbaikan</p>
+                <h4 class="text-2xl font-black text-slate-800 dark:text-slate-100">${needsRevision.length}</h4>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Revision Table -->
+        ${needsRevision.length > 0 ? `
+        <section class="animate-fade-in">
+          <div class="bg-rose-50 dark:bg-rose-900/10 p-8 rounded-[3rem] border-2 border-rose-100 dark:border-rose-900/30">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center text-lg shadow-lg shadow-rose-200">
+                <i class="bi bi-tools"></i>
+              </div>
+              <div>
+                <h3 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Laporan Perlu Perbaikan</h3>
+                <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest">Segera perbaiki data berikut sesuai catatan admin</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-separate border-spacing-y-4">
+                <thead>
+                  <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6">
+                    <th class="pb-2">Formulir</th>
+                    <th class="pb-2">Periode</th>
+                    <th class="pb-2">Catatan Admin</th>
+                    <th class="pb-2 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${needsRevision.map(r => `
+                    <tr class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm hover:shadow-md transition-all group">
+                      <td class="py-5 px-6 rounded-l-3xl border-y-2 border-l-2 border-themed font-black text-slate-800 dark:text-slate-200 text-sm">
+                        ${FORM_DEFINITIONS[r._type]?.label || r._type}
+                      </td>
+                      <td class="py-5 px-6 border-y-2 border-themed text-slate-600 dark:text-slate-400 font-bold text-sm">
+                        ${r.Bulan} ${r.Tahun}
+                      </td>
+                      <td class="py-5 px-6 border-y-2 border-themed text-rose-600 dark:text-rose-400 text-xs italic font-bold">
+                        ${r.Catatan_Validasi || 'Tidak ada catatan khusus.'}
+                      </td>
+                      <td class="py-5 px-6 rounded-r-3xl border-y-2 border-r-2 border-themed text-right">
+                        <button onclick="editReport('${r._type}', '${r.Id_Data}')" class="bg-slate-900 dark:bg-rose-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg hover:shadow-emerald-200">
+                          PERBAIKI <i class="bi bi-pencil-square ml-1"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        ` : ''}
+
+        <!-- Analytics Chapters Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center">
+            <h3 class="text-slate-800 dark:text-slate-100 text-lg font-bold self-start mb-6">Validasi Laporan</h3>
+            <div class="w-full h-72 relative">
+              <canvas id="validationChart"></canvas>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-4xl font-black text-slate-800 dark:text-slate-100" id="donut-percentage">0%</span>
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selesai</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+            <h3 class="text-slate-800 dark:text-slate-100 text-lg font-bold mb-6">Statistik Laporan Bulanan</h3>
+            <div class="h-72 w-full">
+              <canvas id="statsChart"></canvas>
+            </div>
+          </div>
+
+          <div class="lg:col-span-3 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-slate-800 dark:text-slate-100 text-lg font-bold">Tren Kematian Anak</h3>
+              <div class="flex gap-4">
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-rose-600"></div><span class="text-[10px] font-bold text-slate-500 uppercase">Neonatal</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-400"></div><span class="text-[10px] font-bold text-slate-500 uppercase">Balita</span></div>
+              </div>
+            </div>
+            <div class="h-72 w-full">
+              <canvas id="deathChart"></canvas>
+            </div>
           </div>
         </section>
     `;
@@ -225,11 +625,20 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${incomingReports.map(r => `
               <div class="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl flex justify-between items-center shadow-sm">
-                <div>
-                  <h4 class="font-bold text-slate-900">${getFormLabel(r._type)}</h4>
-                  <p class="text-xs text-slate-500 font-bold uppercase">${r.Nama_Puskesmas} • ${r.Bulan} ${r.Tahun}</p>
+                <div class="flex gap-4 items-center">
+                  <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-900">${getFormLabel(r._type)}</h4>
+                    <p class="text-xs text-slate-500 font-bold uppercase">${r.Nama_Puskesmas || r['Nama Puskesmas']} • ${r.Bulan || r.bulan} ${r.Tahun || r.tahun}</p>
+                    <p class="text-sm text-emerald-600 font-medium mt-1">Menunggu validasi admin</p>
+                  </div>
                 </div>
-                <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;')})" class="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-emerald-200">VALIDASI</button>
+                <div class="flex gap-2">
+                  <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;').replace(/`/g, '&#96;')})" class="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-emerald-200">VALIDASI</button>
+                  <button onclick="deleteData('${r._type}', '${r.Id_Data}')" class="bg-white text-rose-600 px-3 py-2.5 rounded-xl text-sm font-black shadow-sm border border-rose-200"><i class="bi bi-trash"></i></button>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -243,17 +652,25 @@
         <section class="animate-fade-in">
           <div class="mb-6 flex items-center gap-3">
             <div class="w-2 h-8 bg-rose-500 rounded-full"></div>
-            <h3 class="text-2xl font-black text-slate-900 tracking-tight">Laporan Perlu Perbaikan</h3>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Laporan Perlu Perbaikan</h3>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${needsRevision.map(r => `
-              <div class="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex justify-between items-center shadow-sm">
-                <div>
-                  <h4 class="font-bold text-slate-900">${getFormLabel(r._type)}</h4>
-                  <p class="text-xs text-slate-500 font-bold uppercase">${r.Bulan} ${r.Tahun}</p>
-                  <p class="text-sm text-rose-600 mt-1 italic">"${r.Catatan_Validasi || ''}"</p>
+              <div class="bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 p-6 rounded-3xl flex justify-between items-center shadow-sm">
+                <div class="flex gap-4 items-center">
+                  <div class="w-12 h-12 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg">
+                    <i class="bi bi-exclamation-triangle"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-900 dark:text-slate-100">${getFormLabel(r._type)}</h4>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">${r.Bulan || r.bulan} ${r.Tahun || r.tahun}</p>
+                    <p class="text-sm text-rose-600 dark:text-rose-400 font-medium mt-1 italic">"${r.Catatan_Validasi || 'Data perlu diperiksa kembali'}"</p>
+                  </div>
                 </div>
-                <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;')})" class="bg-white text-rose-600 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-rose-200">PERBAIKI</button>
+                <div class="flex gap-2">
+                  <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;').replace(/`/g, '&#96;')})" class="bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 px-5 py-2.5 rounded-xl text-sm font-black shadow-sm border border-rose-200 dark:border-rose-800 transition-colors hover:bg-rose-500 hover:text-white dark:hover:bg-rose-600">PERBAIKI</button>
+                  ${appState.isAdmin ? `<button onclick="deleteData('${r._type}', '${r.Id_Data}')" class="bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 px-3 py-2.5 rounded-xl text-sm font-black shadow-sm border border-rose-200 dark:border-rose-800"><i class="bi bi-trash"></i></button>` : ''}
+                </div>
               </div>
             `).join('')}
           </div>
@@ -261,19 +678,93 @@
       `;
     }
 
+    // Riwayat Laporan
+    const topReports = allReports.sort((a, b) => {
+      const dateA = new Date(a.Timestamp || a.Tanggal_Input || 0).getTime();
+      const dateB = new Date(b.Timestamp || b.Tanggal_Input || 0).getTime();
+      return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
+    }).slice(0, 10);
+    html += `
+      <section class="animate-fade-in">
+        <div class="mb-6 flex items-center gap-3">
+          <div class="w-2 h-8 bg-blue-500 rounded-full"></div>
+          <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Riwayat Laporan</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                  <th class="p-4 font-bold">Jenis Laporan</th>
+                  <th class="p-4 font-bold">Puskesmas</th>
+                  <th class="p-4 font-bold">Periode</th>
+                  <th class="p-4 font-bold">Status</th>
+                  <th class="p-4 font-bold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${topReports.length === 0 ? `
+                  <tr>
+                    <td colspan="5" class="p-12 text-center">
+                      <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <i class="bi bi-inbox"></i>
+                      </div>
+                      <p class="text-slate-400 font-medium">Belum ada riwayat laporan</p>
+                    </td>
+                  </tr>
+                ` : topReports.map(r => `
+                  <tr class="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
+                    <td class="p-4 font-bold text-slate-800 dark:text-slate-200">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px]">
+                          <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        ${getFormLabel(r._type)}
+                      </div>
+                    </td>
+                    <td class="p-4 text-slate-600 dark:text-slate-400">${r.Nama_Puskesmas || r['Nama Puskesmas'] || '-'}</td>
+                    <td class="p-4 text-slate-600 dark:text-slate-400">${r.Bulan || r.bulan || ''} ${r.Tahun || r.tahun || ''}</td>
+                    <td class="p-4">
+                      <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        r.Status_Validasi === 'Valid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' :
+                        r.Status_Validasi === 'Belum Valid' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400' :
+                        r.Status_Validasi === 'Terkirim' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' :
+                        'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                      }">${r.Status_Validasi || 'Draft'}</span>
+                    </td>
+                    <td class="p-4 text-right">
+                      <div class="flex justify-end gap-2">
+                        <button onclick="navigate('${r._type}', ${JSON.stringify(r).replace(/"/g, '&quot;').replace(/`/g, '&#96;')})" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center transition-colors"><i class="bi bi-pencil-square"></i></button>
+                        ${(appState.isAdmin || r.Status_Validasi !== 'Valid') ? `<button onclick="deleteData('${r._type}', '${r.Id_Data}')" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-colors"><i class="bi bi-trash"></i></button>` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    `;
+
     // Forms Grid
     html += `
         <section>
           <div class="mb-8 flex items-center justify-between">
-              <h3 class="text-2xl font-black text-slate-900 tracking-tight">Navigasi Pelaporan</h3>
+              <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">${appState.isAdmin ? 'Data Seluruh Wilayah' : 'Data Puskesmas Anda'}</h3>
+              <div class="flex items-center gap-2">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">Update Berkala</p>
+                <button onclick="fetchInitialData()" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm flex items-center justify-center"><i class="bi bi-arrow-clockwise"></i></button>
+              </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             ${FORMS.filter(f => appState.isAdmin || f.id !== 'users').map(f => `
-              <div onclick="navigate('${f.id}')" class="form-card bg-white p-6 cursor-pointer group">
+              <div onclick="navigate('${f.id}')" class="form-card bg-white dark:bg-slate-800 p-6 cursor-pointer group border-slate-100 dark:border-slate-700">
                 <div class="${f.color} w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
                   ${f.icon}
                 </div>
-                <h4 class="text-lg font-bold text-slate-800 mb-1 group-hover:text-emerald-600 transition-colors">${f.label}</h4>
+                <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1 group-hover:text-emerald-600 transition-colors">${f.label}</h4>
+                <p class="text-xs text-slate-400 font-medium leading-relaxed">Kelola dan input data ${f.label.toLowerCase()} secara berkala.</p>
               </div>
             `).join('')}
           </div>
@@ -282,7 +773,62 @@
     `;
 
     content.innerHTML = html;
+
+    // Initialize Slider
+    let currentSlide = 0;
+    appState.sliderInterval = setInterval(() => {
+      const prevSlide = document.getElementById(`slide-${currentSlide}`);
+      currentSlide = (currentSlide + 1) % SLIDER_IMAGES.length;
+      const nextSlide = document.getElementById(`slide-${currentSlide}`);
+      if (prevSlide && nextSlide) {
+        prevSlide.classList.replace('opacity-100', 'opacity-0');
+        nextSlide.classList.replace('opacity-0', 'opacity-100');
+      }
+    }, 5000);
+
+    // Initialize Clock
+    const updateClock = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      let greeting = "Selamat Malam";
+      if (hour < 11) greeting = "Selamat Pagi";
+      else if (hour < 15) greeting = "Selamat Siang";
+      else if (hour < 19) greeting = "Selamat Sore";
+      
+      const greetEl = document.getElementById('greeting-text');
+      const dateEl = document.getElementById('date-text');
+      const clockEl = document.getElementById('clock-text');
+      
+      if (greetEl) greetEl.innerHTML = `${greeting}, ${appState.currentUser.puskesmasName || appState.currentUser.username}`;
+      if (dateEl) dateEl.textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
+      if (clockEl) clockEl.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+    };
+    updateClock();
+    appState.clockInterval = setInterval(updateClock, 1000);
+
+    // Initialize Charts
+    setTimeout(() => {
+      renderValidationChart(filteredRecords);
+      renderStatsChart(filteredRecords);
+      renderDeathChart(filteredRecords);
+    }, 500);
+  } catch (err) {
+    console.error('Dashboard render error:', err);
+    showNotification('Terjadi kesalahan saat memuat dashboard: ' + err.message, true);
+    document.getElementById('app-content').innerHTML = `
+      <div class="p-12 text-center">
+        <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3 class="text-2xl font-black text-slate-900 mb-2">Gagal Memuat Dashboard</h3>
+        <p class="text-slate-500 mb-8 max-w-md mx-auto">Terjadi kesalahan teknis saat menyusun data dashboard. Silakan coba muat ulang halaman.</p>
+        <button onclick="fetchInitialData()" class="bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-slate-800 transition-all">
+          Coba Lagi
+        </button>
+      </div>
+    `;
   }
+}
 
   function getFormLabel(id) {
     const form = FORMS.find(f => f.id === id);
@@ -291,57 +837,74 @@
 
   // Form Rendering
   function renderForm(formId) {
-    const content = document.getElementById('app-content');
-    const formDef = FORMS.find(f => f.id === formId);
+    try {
+      const content = document.getElementById('app-content');
+      if (!content) return;
+      
+      const formDef = FORMS.find(f => f.id === formId);
+      if (!formDef) {
+        showNotification('Formulir tidak ditemukan', true);
+        navigate('dashboard');
+        return;
+      }
     
     let html = `
-      <div class="max-w-5xl mx-auto">
-        <button onclick="navigate('dashboard')" class="mb-8 flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors">
-            <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+      <div class="max-w-5xl mx-auto px-4 sm:px-0">
+        <button onclick="navigate('dashboard')" class="mb-8 flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-black transition-colors px-2">
+            <i class="bi bi-arrow-left text-xl"></i> KEMBALI KE BERANDA
         </button>
         
-        <div class="bg-white rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
-          <div class="bg-slate-900 p-12 text-white relative overflow-hidden">
+        <div class="bg-white rounded-[2rem] sm:rounded-[40px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden animate-fade-in">
+          <div class="${formDef.color} p-8 sm:p-12 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-8 text-white/10 text-9xl">
+              ${formDef.icon}
+            </div>
             <div class="relative z-10">
-              <h2 class="text-4xl font-black tracking-tight mb-2">Formulir ${formDef.label}</h2>
+              <p class="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 mb-2">Formulir Pelaporan</p>
+              <h2 class="text-3xl sm:text-5xl font-black tracking-tighter">${formDef.label}</h2>
             </div>
           </div>
           
-          <form id="data-form" onsubmit="submitForm(event, '${formId}')" class="p-10">
-            <div id="form-fields-container"></div>
+          <form id="data-form" onsubmit="submitForm(event, '${formId}')" class="p-6 sm:p-12">
+            <div id="form-fields-container" class="space-y-8"></div>
             
-            <div class="col-span-1 md:col-span-2 bg-slate-50 p-8 rounded-3xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-              <div class="space-y-4">
-                <h4 class="text-slate-900 font-black uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
-                  <i class="fas fa-user-edit text-blue-600"></i> Petugas Penginput
+            <div class="bg-slate-50 p-6 sm:p-8 rounded-3xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+              <div class="space-y-6">
+                <h4 class="text-slate-900 font-bold uppercase text-[10px] tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <i class="bi bi-person-vcard text-blue-600 text-lg"></i> INFORMASI PETUGAS
                 </h4>
-                ${renderInput('Nama_Petugas_Penginput', 'Nama Petugas', 'text', '', !appState.isAdmin)}
-                ${renderInput('Tanggal_Input', 'Tanggal Input', 'date')}
+                ${renderInput('Nama_Petugas_Penginput', 'Nama Petugas', 'text', 'Masukkan nama lengkap', false, 'bi bi-person-fill')}
+                ${renderInput('Tanggal_Input', 'Tanggal Laporan', 'date', '', false, 'bi bi-calendar-check')}
               </div>
-              <div class="space-y-4">
-                <h4 class="text-slate-900 font-black uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
-                  <i class="fas fa-clipboard-check text-emerald-600"></i> Status Validasi
+              <div class="space-y-6">
+                <h4 class="text-slate-900 font-bold uppercase text-[10px] tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <i class="bi bi-patch-check text-emerald-600 text-lg"></i> STATUS VALIDASI
                 </h4>
                 ${appState.isAdmin ? `
-                  ${renderSelect('Status_Validasi', 'Status Validasi', ['Draft', 'Terkirim', 'Valid', 'Belum Valid'])}
-                  <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Catatan Validasi</label>
-                    <textarea name="Catatan_Validasi" class="form-control rounded-xl p-3 border-2 border-slate-200 w-full" rows="2"></textarea>
+                  ${renderSelect('Status_Validasi', 'Status Validasi', ['Draft', 'Terkirim', 'Valid', 'Belum Valid'], 'bi bi-shield-check')}
+                  <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Catatan Admin</label>
+                    <textarea name="Catatan_Validasi" placeholder="Catatan untuk Puskesmas jika perlu perbaikan..." class="form-control rounded-2xl p-4 border-2 border-slate-200 w-full focus:border-indigo-500 transition-all text-sm font-medium" rows="3"></textarea>
                   </div>
                 ` : `
-                  <div class="p-4 bg-white rounded-2xl border border-slate-200">
-                    <p class="text-xs font-bold text-slate-400 uppercase">Status Saat Ini:</p>
-                    <p class="font-black" id="status-display">Draft</p>
-                    <p id="catatan-display" class="text-sm text-rose-600 italic mt-2"></p>
+                  <div class="p-6 bg-white rounded-3xl border-2 border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Laporan:</p>
+                    <div class="flex items-center gap-2">
+                      <div id="status-dot" class="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <p class="font-black text-slate-800 text-lg" id="status-display">Draft</p>
+                    </div>
+                    <p id="catatan-display" class="text-sm text-rose-600 font-bold italic mt-3 bg-rose-50 p-3 rounded-xl hidden"></p>
                   </div>
                   <input type="hidden" name="Status_Validasi" value="Terkirim">
                 `}
               </div>
             </div>
             
-            <div class="mt-10 flex justify-end gap-4">
-              <button type="button" onclick="navigate('dashboard')" class="px-8 py-4 rounded-2xl text-slate-600 font-black text-sm hover:bg-slate-50 transition-all">BATALKAN</button>
-              <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-xl transition-all">KIRIM LAPORAN</button>
+            <div class="mt-12 flex flex-col sm:flex-row justify-end gap-4">
+              <button type="button" onclick="navigate('dashboard')" class="px-8 py-4 rounded-2xl text-slate-500 font-black text-sm hover:bg-slate-100 transition-all order-2 sm:order-1">BATALKAN</button>
+              <button type="submit" class="bg-indigo-600 hover:bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-sm shadow-2xl shadow-indigo-200 transition-all flex items-center justify-center gap-3 order-1 sm:order-2">
+                SIMPAN & KIRIM LAPORAN <i class="bi bi-send-fill"></i>
+              </button>
             </div>
           </form>
         </div>
@@ -351,7 +914,7 @@
     content.innerHTML = html;
     
     // Load specific form fields from template
-    const templateContent = document.getElementById(`template-${formId}`);
+    const templateContent = document.getElementById(`raw-template-${formId}`);
     if (templateContent) {
       document.getElementById('form-fields-container').innerHTML = templateContent.innerHTML;
     } else {
@@ -360,25 +923,359 @@
 
     // Populate data if editing
     populateFormData();
+    
+    // Setup auto calculations
+    setupFormCalculations(formId);
+    }
   }
 
-  function renderInput(name, label, type = 'text', placeholder = '', readOnly = false) {
+  function setupFormCalculations(formId) {
+    const form = document.getElementById('data-form');
+    if (!form) return;
+
+    const getVal = (name) => {
+      const el = form.elements[name];
+      if (!el) return 0;
+      return el.value ? parseFloat(el.value) || 0 : 0;
+    };
+
+    const setVal = (name, val) => {
+      const el = form.elements[name];
+      if (el) {
+        if (val === 0 || (val && !isNaN(val))) {
+          el.value = Number.isInteger(val) ? val : parseFloat(val.toFixed(2));
+        } else {
+          el.value = '';
+        }
+      }
+    };
+
+    form.addEventListener('input', (e) => {
+      try {
+        if (formId === 'kegiatan') {
+          const sPusdatin = getVal('Sasaran_Lahir_Hidup_Pusdatin');
+          const sSpm = getVal('Sasaran_Lahir_Hidup_SPM_PKM');
+
+          // Sasaran Komplikasi Neonatus
+          const sNeoKompPusdatin = sPusdatin * 0.15;
+          const sNeoKompSpm = sSpm * 0.15;
+          setVal('Sasaran_Neonatus_Komplikasi', sNeoKompPusdatin);
+          setVal('Sasaran_Komplikasi_Neonatus_SPM', sNeoKompSpm);
+
+          // KN 1
+          const kn1L = getVal('KN1_L');
+          const kn1P = getVal('KN1_P');
+          const kn1Total = kn1L + kn1P;
+          setVal('KN1_Jml', kn1Total);
+          setVal('KN1_Abs', kn1Total);
+          setVal('KN1_Persen_Pusdatin', sPusdatin ? (kn1Total / sPusdatin) * 100 : 0);
+          setVal('KN1_Persen_SPM', sSpm ? (kn1Total / sSpm) * 100 : 0);
+
+          // KN LENGKAP
+          const knL_L = getVal('KN_Lengkap_L');
+          const knL_P = getVal('KN_Lengkap_P');
+          const knL_Total = knL_L + knL_P;
+          setVal('KN_Lengkap_Jml', knL_Total);
+          setVal('KN_Lengkap_Abs', knL_Total);
+          setVal('KN_Lengkap_Persen_Pusdatin', sPusdatin ? (knL_Total / sPusdatin) * 100 : 0);
+          setVal('KN_Lengkap_Persen_SPM', sSpm ? (knL_Total / sSpm) * 100 : 0);
+
+          // Neonatus Komplikasi Ditangani
+          const neoKompL = getVal('Neonatus_Komplikasi_Ditangani_L');
+          const neoKompP = getVal('Neonatus_Komplikasi_Ditangani_P');
+          const neoKompTotal = neoKompL + neoKompP;
+          setVal('Neonatus_Komplikasi_Ditangani_Jml', neoKompTotal);
+          setVal('Neonatus_Komplikasi_Ditangani_Abs', neoKompTotal);
+          setVal('Neonatus_Komplikasi_Ditangani_Persen_Pusdatin', sNeoKompPusdatin ? (neoKompTotal / sNeoKompPusdatin) * 100 : 0);
+          setVal('Neonatus_Komplikasi_Ditangani_Persen_SPM', sNeoKompSpm ? (neoKompTotal / sNeoKompSpm) * 100 : 0);
+
+          // Kunjungan Bayi
+          const bayL = getVal('Kunjungan_Bayi_L');
+          const bayP = getVal('Kunjungan_Bayi_P');
+          const bayTotal = bayL + bayP;
+          setVal('Kunjungan_Bayi_Jml', bayTotal);
+          setVal('Kunjungan_Bayi_Abs', bayTotal);
+          setVal('Kunjungan_Bayi_Persen_Pusdatin', sPusdatin ? (bayTotal / sPusdatin) * 100 : 0);
+          setVal('Kunjungan_Bayi_Persen_SPM', sSpm ? (bayTotal / sSpm) * 100 : 0);
+
+          // Pelayanan Kesehatan Balita
+          const sBalitaPusdatin = getVal('Sasaran_Anak_Balita_0_4_Th_Pusdatin');
+          const sBalitaSpm = getVal('Sasaran_Balita_SPM');
+          const balitaL = getVal('Pelayanan_Kesehatan_Balita_L');
+          const balitaP = getVal('Pelayanan_Kesehatan_Balita_P');
+          const balitaTotal = balitaL + balitaP;
+          setVal('Pelayanan_Kesehatan_Balita_Jml', balitaTotal);
+          setVal('Pelayanan_Kesehatan_Balita_Abs', balitaTotal);
+          setVal('Pelayanan_Kesehatan_Balita_Persen_Pusdatin', sBalitaPusdatin ? (balitaTotal / sBalitaPusdatin) * 100 : 0);
+          setVal('Pelayanan_Kesehatan_Balita_Persen_SPM', sBalitaSpm ? (balitaTotal / sBalitaSpm) * 100 : 0);
+          
+          setVal('Indikator_SPM_Pelayanan_Kesehatan_Balita_Abs', balitaTotal);
+          setVal('Indikator_SPM_Pelayanan_Kesehatan_Balita_Persen', sBalitaSpm ? (balitaTotal / sBalitaSpm) * 100 : 0);
+        }
+        else if (formId === 'rpjmn') {
+          const sLHPusdatin = getVal('Sasaran_Lahir_Hidup_Pusdatin');
+          const sBalitaPusdatin = getVal('Sasaran_Balita_Pusdatin');
+          const sBalitaSpm = getVal('Sasaran_Balita_SPM_Kab_Minsel_0_4_Th');
+          const pkmJml = getVal('Jumlah_Puskesmas');
+
+          setVal('KN_Lengkap_Persen', sLHPusdatin ? (getVal('KN_Lengkap_Abs') / sLHPusdatin) * 100 : 0);
+          setVal('Balita_Dipantau_Tumbuh_Kembang_Persen_Pusdatin', sBalitaPusdatin ? (getVal('Balita_Dipantau_Tumbuh_Kembang_Abs') / sBalitaPusdatin) * 100 : 0);
+          setVal('Balita_Dipantau_Tumbuh_Kembang_Persen_SPM_Kab', sBalitaSpm ? (getVal('Balita_Dipantau_Tumbuh_Kembang_Abs') / sBalitaSpm) * 100 : 0);
+          
+          setVal('Jumlah_Balita_Berobat_Persen_Pusdatin', sBalitaPusdatin ? (getVal('Jumlah_Balita_Berobat_Abs') / sBalitaPusdatin) * 100 : 0);
+          setVal('Jumlah_Balita_Berobat_Persen_SPM_Kab', sBalitaSpm ? (getVal('Jumlah_Balita_Berobat_Abs') / sBalitaSpm) * 100 : 0);
+          
+          setVal('Jumlah_Balita_MTBS_Persen_Pusdatin', getVal('Jumlah_Balita_Berobat_Abs') ? (getVal('Jumlah_Balita_MTBS_Abs') / getVal('Jumlah_Balita_Berobat_Abs')) * 100 : 0);
+          
+          setVal('Jumlah_Balita_SDIDTK_Persen_Pusdatin', sBalitaPusdatin ? (getVal('Jumlah_Balita_SDIDTK_Abs') / sBalitaPusdatin) * 100 : 0);
+          setVal('Jumlah_Balita_SDIDTK_Persen_SPM_Kab', sBalitaSpm ? (getVal('Jumlah_Balita_SDIDTK_Abs') / sBalitaSpm) * 100 : 0);
+          
+          setVal('Puskesmas_Kelas_Ibu_Balita_50_Persen_Desa_Persen', pkmJml ? (getVal('Puskesmas_Kelas_Ibu_Balita_50_Persen_Desa_Abs') / pkmJml) * 100 : 0);
+          setVal('Puskesmas_Melaksanakan_MTBS_Persen', pkmJml ? (getVal('Puskesmas_Melaksanakan_MTBS_Abs') / pkmJml) * 100 : 0);
+          setVal('Puskesmas_Melaksanakan_SDIDTK_Persen', pkmJml ? (getVal('Puskesmas_Melaksanakan_SDIDTK_Abs') / pkmJml) * 100 : 0);
+        }
+        else if (formId === 'kelasBalita') {
+          const k01 = getVal('Kelas_0_1_Tahun');
+          const k12 = getVal('Kelas_1_2_Tahun');
+          const k25 = getVal('Kelas_2_5_Tahun');
+          setVal('Jumlah_Kelas_Ibu_Balita', k01 + k12 + k25);
+        }
+        else if (formId === 'kelasBalitaKabKota') {
+           const jmlDesa = getVal('Jumlah_Desa_Kelurahan');
+           const desaLaks = getVal('Desa_Dengan_Kelas_Ibu_Balita_Abs');
+           setVal('Desa_Dengan_Kelas_Ibu_Balita_Persen', jmlDesa ? (desaLaks / jmlDesa) * 100 : 0);
+           setVal('Persen_Desa_Melaksanakan_KLS_Ibu_Balita', pkmJml ? (getVal('Puskesmas_Melaksanakan_Kelas_Ibu_Balita_di_50_Persen_Desa_Kelurahan') / pkmJml) * 100 : 0);
+        }
+        else if (formId === 'kematianNeonatal') {
+          const lH_L = getVal('Lahir_Hidup_Absolut_L');
+          const lH_P = getVal('Lahir_Hidup_Absolut_P');
+          setVal('Lahir_Hidup_Total', lH_L + lH_P);
+          
+          const n06 = getVal('Kematian_0_6_Hari');
+          const n728 = getVal('Kematian_7_28_Hari');
+          setVal('Jumlah_Kematian_Neonatal', n06 + n728);
+        }
+        else if (formId === 'kematianBalita') {
+          const neo = getVal('Jumlah_Kematian_Neonatal'); 
+          const postNeo = getVal('Kematian_Post_Neonatal_29Hr_11Bln');
+          const bayi011 = neo + postNeo;
+          setVal('Kematian_Bayi_0_11_Bln', bayi011);
+
+          const anak1259 = getVal('Kematian_Anak_Balita_12_59_Bln');
+          setVal('Kematian_Balita_0_59_Bln', bayi011 + anak1259);
+        }
+      } catch (err) {
+        console.warn('Calculation failed:', err);
+      }
+    });
+  }
+
+  function renderInput(name, label, type = 'text', placeholder = '', readOnly = false, icon = 'bi bi-pencil') {
     return `
-      <div class="space-y-1">
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">${label}</label>
-        <input name="${name}" type="${type}" placeholder="${placeholder}" ${readOnly ? 'readonly' : 'required'} class="form-control rounded-xl p-3 w-full border-2 border-slate-200 ${readOnly ? 'bg-slate-100' : ''}">
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none ml-1">${label}</label>
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+            <i class="${icon}"></i>
+          </div>
+          <input name="${name}" type="${type}" placeholder="${placeholder}" ${readOnly ? 'readonly' : 'required'} 
+            class="form-control rounded-2xl py-3.5 pl-11 pr-4 w-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-all text-sm font-bold outline-none ${readOnly ? 'bg-slate-50/50 dark:bg-slate-900/50 text-slate-400' : 'text-slate-800 dark:text-white focus:shadow-lg focus:shadow-indigo-100 dark:focus:shadow-none'}">
+        </div>
       </div>
     `;
   }
 
-  function renderSelect(name, label, options) {
+  function renderValidationChart(data) {
+    const canvas = document.getElementById('validationChart');
+    const pctEl = document.getElementById('donut-percentage');
+    if (!canvas) return;
+    
+    let valid = 0, proses = 0;
+    Object.keys(data).forEach(k => {
+      data[k].forEach(r => {
+        if (r.Status_Validasi === 'Valid') {
+          valid++;
+        } else {
+          proses++;
+        }
+      });
+    });
+
+    const total = valid + proses;
+    const validPct = total > 0 ? Math.round((valid / total) * 100) : 0;
+    if (pctEl) pctEl.textContent = `${validPct}%`;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+
+    if (appState.charts.pie) appState.charts.pie.destroy();
+    appState.charts.pie = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Valid', 'Proses'],
+        datasets: [{
+          data: [valid, proses],
+          backgroundColor: ['#10b981', isDark ? '#334155' : '#cbd5e1'],
+          borderWidth: 0,
+          cutout: '75%'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  function renderStatsChart(data) {
+    const canvas = document.getElementById('statsChart');
+    if (!canvas) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthlyData = Array(12).fill(0);
+    
+    Object.keys(data).forEach(k => {
+      data[k].forEach(r => {
+        const m = (r.Bulan || '').toLowerCase().trim();
+        const idx = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'].indexOf(m);
+        if (idx !== -1) monthlyData[idx]++;
+      });
+    });
+
+    if (appState.charts.bar) appState.charts.bar.destroy();
+    appState.charts.bar = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Total Laporan',
+          data: monthlyData,
+          backgroundColor: '#6366f1',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { 
+            beginAtZero: true, 
+            grid: { color: gridColor, borderDash: [5, 5] },
+            ticks: { color: textColor, font: { weight: 'bold' } }
+          },
+          x: { 
+            grid: { display: false },
+            ticks: { color: textColor, font: { weight: 'bold' } }
+          }
+        }
+      }
+    });
+  }
+
+  function renderDeathChart(data) {
+    const canvas = document.getElementById('deathChart');
+    if (!canvas) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+    const monthsArr = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+    const neoDeaths = Array(12).fill(0);
+    const balitaDeaths = Array(12).fill(0);
+    
+    if (data.kematianNeonatal) {
+      data.kematianNeonatal.forEach(r => {
+        const m = (r.Bulan || '').toLowerCase().trim();
+        const idx = monthsArr.indexOf(m);
+        if (idx !== -1) neoDeaths[idx] += (Number(r.Jumlah_Kematian_Neonatal) || 0);
+      });
+    }
+
+    if (data.kematianBalita) {
+      data.kematianBalita.forEach(r => {
+        const m = (r.Bulan || '').toLowerCase().trim();
+        const idx = monthsArr.indexOf(m);
+        if (idx !== -1) balitaDeaths[idx] += (Number(r.Kematian_Balita_0_59_Bln) || 0);
+      });
+    }
+
+    if (appState.charts.line) appState.charts.line.destroy();
+    appState.charts.line = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+        datasets: [
+          {
+            label: 'Neonatal',
+            data: neoDeaths,
+            borderColor: '#f43f5e',
+            backgroundColor: '#f43f5e',
+            pointBackgroundColor: '#f43f5e',
+            tension: 0.4,
+            borderWidth: 3,
+            fill: false
+          },
+          {
+            label: 'Balita',
+            data: balitaDeaths,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            pointBackgroundColor: '#fbbf24',
+            tension: 0.4,
+            borderWidth: 3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true, 
+            grid: { color: gridColor, borderDash: [5, 5] },
+            ticks: { color: textColor, font: { weight: 'bold' } }
+          },
+          x: { 
+            grid: { color: gridColor, borderDash: [5, 5] },
+            ticks: { color: textColor, font: { weight: 'bold' } }
+          }
+        }
+      }
+    });
+  }
+
+  function renderSelect(name, label, options, icon = 'bi bi-list-ul') {
     return `
-      <div class="space-y-1">
-        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">${label}</label>
-        <select name="${name}" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
-          <option value="">Pilih ${label}</option>
-          ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
-        </select>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none ml-1">${label}</label>
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+            <i class="${icon}"></i>
+          </div>
+          <select name="${name}" required 
+            class="form-select rounded-2xl py-3.5 pl-11 pr-4 w-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-600 transition-all text-sm font-black outline-none appearance-none text-slate-800 dark:text-white focus:shadow-lg focus:shadow-indigo-100 dark:focus:shadow-none">
+            <option value="">Pilih ${label}</option>
+            ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
+          </select>
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+            <i class="bi bi-chevron-down text-xs"></i>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -388,14 +1285,27 @@
     if (!form) return;
 
     // Default values
+    const now = new Date();
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    
     const defaults = {
-      Tanggal_Input: new Date().toISOString().split('T')[0],
+      Nama_Petugas_Penginput: '',
+      Tanggal_Input: localDate,
       Nama_Puskesmas: appState.isAdmin ? '' : appState.currentUser.puskesmasName,
-      Id_Puskesmas: appState.isAdmin ? '' : appState.currentUser.puskesmasId,
-      Nama_Petugas_Penginput: appState.isAdmin ? '' : appState.currentUser.username
+      Id_Puskesmas: appState.isAdmin ? '' : appState.currentUser.puskesmasId
     };
 
     const data = appState.editingData || defaults;
+
+    // Ensure fundamental identity fields exist in form
+    ['Id_Puskesmas', 'Nama_Puskesmas', 'Status_Validasi'].forEach(field => {
+       if (!form.elements[field]) {
+         const hidden = document.createElement('input');
+         hidden.type = 'hidden';
+         hidden.name = field;
+         form.appendChild(hidden);
+       }
+    });
 
     Object.keys(data).forEach(key => {
       const input = form.elements[key];
@@ -407,8 +1317,23 @@
     if (!appState.isAdmin && appState.editingData) {
       const statusDisp = document.getElementById('status-display');
       const catDisp = document.getElementById('catatan-display');
-      if (statusDisp) statusDisp.textContent = data.Status_Validasi || 'Draft';
-      if (catDisp && data.Catatan_Validasi) catDisp.textContent = `"${data.Catatan_Validasi}"`;
+      const statusDot = document.getElementById('status-dot');
+      
+      const status = data.Status_Validasi || 'Draft';
+      if (statusDisp) statusDisp.textContent = status;
+      
+      if (statusDot) {
+        statusDot.className = 'w-3 h-3 rounded-full ' + (
+          status === 'Valid' ? 'bg-emerald-500' :
+          status === 'Belum Valid' ? 'bg-rose-500' :
+          status === 'Terkirim' ? 'bg-blue-500' : 'bg-slate-400'
+        );
+      }
+
+      if (catDisp && data.Catatan_Validasi) {
+        catDisp.textContent = `Pesan Admin: "${data.Catatan_Validasi}"`;
+        catDisp.classList.remove('hidden');
+      }
     }
     
     // Add Id_Data hidden field if editing
@@ -422,21 +1347,77 @@
   }
 
   function submitForm(e, formId) {
-    e.preventDefault();
-    showLoading(true);
+    if (e) e.preventDefault();
     
-    const form = e.target;
+    const form = document.getElementById('data-form');
+    if (!form) return;
+
+    // Reset previous validation errors
+    const errorMsgs = form.querySelectorAll('.error-message');
+    errorMsgs.forEach(msg => msg.remove());
+    const errorInputs = form.querySelectorAll('.border-rose-500, .animate-shake');
+    errorInputs.forEach(input => {
+      input.classList.remove('border-rose-500', 'animate-shake', 'ring-rose-500/20', 'ring-4');
+    });
+
+    // Manual Validation
+    const requiredInputs = form.querySelectorAll('[required]');
+    let hasError = false;
+    let firstErrorElement = null;
+
+    requiredInputs.forEach(input => {
+      const isEmpty = !input.value || input.value.trim() === '';
+      
+      if (isEmpty) {
+        hasError = true;
+        input.classList.add('border-rose-500', 'animate-shake', 'ring-rose-500/20', 'ring-4');
+        
+        if (!firstErrorElement) firstErrorElement = input;
+        
+        // Remove error on input
+        input.addEventListener('input', () => {
+          input.classList.remove('border-rose-500', 'animate-shake', 'ring-rose-500/20', 'ring-4');
+        }, { once: true });
+      }
+    });
+
+    if (hasError) {
+      showNotification('Harap lengkapi semua kolom wajib bertanda bintang (*)', true);
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorElement.focus();
+      }
+      return;
+    }
+
+    showLoading(true);
     const formData = new FormData(form);
     const dataObj = {};
     
     formData.forEach((value, key) => {
       // Convert numbers
-      if (value !== '' && !isNaN(value) && key !== 'Id_Puskesmas' && key !== 'Nama_Puskesmas' && key !== 'Bulan' && key !== 'Tahun') {
+      if (value !== '' && !isNaN(value) && 
+          key !== 'Id_Puskesmas' && 
+          key !== 'Nama_Puskesmas' && 
+          key !== 'Bulan' && 
+          key !== 'Tahun' &&
+          key !== 'Nama_Petugas_Penginput') {
         dataObj[key] = Number(value);
       } else {
         dataObj[key] = value;
       }
     });
+
+    // Ensure Puskesmas identity is injected correctly
+    if (!appState.isAdmin && appState.currentUser) {
+      dataObj['Id_Puskesmas'] = appState.currentUser.puskesmasId;
+      dataObj['Nama_Puskesmas'] = appState.currentUser.puskesmasName;
+    }
+
+    // Force status for non-admins
+    if (!appState.isAdmin) {
+      dataObj['Status_Validasi'] = 'Terkirim';
+    }
 
     // Map sheet name
     let sheetName = FORMS.find(f => f.id === formId).label.replace(/ /g, '_');
@@ -452,8 +1433,9 @@
     google.script.run
       .withSuccessHandler(res => {
         if (res.success) {
-          showNotification('Data berhasil disimpan');
-          fetchInitialData(); // Will route back to dashboard
+          showNotification('Data Berhasil Terkirim!');
+          appState.currentView = 'dashboard';
+          fetchInitialData();
         } else {
           showLoading(false);
           showNotification(res.message, true);
@@ -463,6 +1445,49 @@
         showLoading(false);
         showNotification('Gagal menyimpan data', true);
       })
-      .submitData(sheetName, dataObj);
+      .submitData(sheetName, dataObj, appState.currentUser);
+  }
+
+  function deleteData(formId, idData) {
+    if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+    
+    showLoading(true);
+    
+    // Map sheet name
+    let sheetName = FORMS.find(f => f.id === formId).label.replace(/ /g, '_');
+    if (formId === 'users') sheetName = 'Users';
+    if (formId === 'sasaran') sheetName = 'Sasaran';
+    if (formId === 'kegiatan') sheetName = 'Kegiatan';
+    if (formId === 'rpjmn') sheetName = 'RPJMN';
+    if (formId === 'kelasBalita') sheetName = 'Kelas_Balita';
+    if (formId === 'kelasBalitaKabKota') sheetName = 'Kelas_Balita_KabKota';
+    if (formId === 'kematianNeonatal') sheetName = 'Kematian_Neonatal';
+    if (formId === 'kematianBalita') sheetName = 'Kematian_Balita';
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res.success) {
+          showNotification('Data berhasil dihapus');
+          fetchInitialData(); // Refresh dashboard
+        } else {
+          showLoading(false);
+          showNotification(res.message, true);
+        }
+      })
+      .withFailureHandler(err => {
+        showLoading(false);
+        showNotification('Gagal menghapus data', true);
+      })
+      .deleteData(sheetName, idData, appState.currentUser);
+  }
+
+  function editReport(type, id) {
+    if (!appState.records || !appState.records[type]) return;
+    const record = appState.records[type].find(r => r.Id_Data == id);
+    if (record) {
+      navigate(type, record);
+    } else {
+      showNotification('Laporan tidak ditemukan', true);
+    }
   }
 </script>

@@ -1,57 +1,88 @@
-<div id="template-kelasBalita">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Identitas -->
-    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Identitas Laporan</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
-          <select name="Bulan" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
-            <option value="">Pilih Bulan</option>
-            <option value="Januari">Januari</option>
-            <option value="Februari">Februari</option>
-            <option value="Maret">Maret</option>
-            <option value="April">April</option>
-            <option value="Mei">Mei</option>
-            <option value="Juni">Juni</option>
-            <option value="Juli">Juli</option>
-            <option value="Agustus">Agustus</option>
-            <option value="September">September</option>
-            <option value="Oktober">Oktober</option>
-            <option value="November">November</option>
-            <option value="Desember">Desember</option>
-          </select>
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
-          <input name="Tahun" type="number" required min="2020" max="2050" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Nama Puskesmas</label>
-          <input name="Nama_Puskesmas" type="text" required readonly class="form-control rounded-xl p-3 w-full border-2 border-slate-200 bg-slate-100">
-        </div>
+<div id="template-kelasBalita" class="space-y-12">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Identitas Section -->
+    <div class="col-span-1 md:col-span-2 bg-slate-50/50 dark:bg-slate-900/50 p-8 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Periode Bulan</label>
+        <select name="Bulan" required class="form-select rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-white dark:bg-slate-800 focus:border-rose-500 transition-all text-sm font-black appearance-none">
+          <option value="">Pilih Bulan</option>
+          <option value="Januari">Januari</option>
+          <option value="Februari">Februari</option>
+          <option value="Maret">Maret</option>
+          <option value="April">April</option>
+          <option value="Mei">Mei</option>
+          <option value="Juni">Juni</option>
+          <option value="Juli">Juli</option>
+          <option value="Agustus">Agustus</option>
+          <option value="September">September</option>
+          <option value="Oktober">Oktober</option>
+          <option value="November">November</option>
+          <option value="Desember">Desember</option>
+        </select>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Tahun</label>
+        <input name="Tahun" type="number" required min="2020" max="2100" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-white dark:bg-slate-800 focus:border-rose-500 transition-all text-sm font-bold">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Puskesmas</label>
+        <input name="Nama_Puskesmas" type="text" readonly class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-slate-50 dark:bg-slate-900 text-slate-400 text-sm font-bold">
       </div>
     </div>
 
-    <!-- Data Kelas Balita -->
-    <div class="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Data Kelas Balita</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah Desa/Kelurahan</label>
-          <input name="Jumlah_Desa_Kelurahan" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+    <!-- Data Indikator Section -->
+    <div class="col-span-1 md:col-span-2 bg-indigo-50/30 dark:bg-indigo-900/10 p-10 rounded-[3rem] border-2 border-indigo-100 dark:border-indigo-900/30">
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-12 h-12 bg-indigo-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200">
+          <i class="bi bi-people-fill"></i>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Desa Menyelenggarakan Kelas Balita</label>
-          <input name="Desa_Menyelenggarakan_Kelas_Balita" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        <div>
+          <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">Cakupan Kelas Ibu Balita</h3>
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Data pelaksanaan kelas ibu balita di tingkat desa/kelurahan</p>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah Kelas Balita</label>
-          <input name="Jumlah_Kelas_Balita" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Desa/Kel -->
+        <div class="space-y-6 md:col-span-1">
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 border-themed shadow-sm">
+            <label class="block text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4 leading-none">Desa/Kel Laksana Kelas (Ya)</label>
+            <input name="Desa_Dengan_Kelas_Ibu_Balita_Ya" type="number" required min="0" placeholder="0" class="w-full bg-transparent text-4xl font-black text-slate-800 dark:text-white outline-none">
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 border-themed shadow-sm opacity-60">
+            <label class="block text-[10px] font-black text-rose-500 uppercase tracking-widest mb-4 leading-none">Desa/Kel Tidak Laksana (Tidak)</label>
+            <input name="Desa_Dengan_Kelas_Ibu_Balita_Tidak" type="number" required min="0" placeholder="0" class="w-full bg-transparent text-2xl font-black text-slate-800 dark:text-white outline-none">
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Ibu Balita Peserta Kelas</label>
-          <input name="Ibu_Balita_Peserta_Kelas" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+
+        <!-- Kelompok Kelas -->
+        <div class="md:col-span-2 bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-2 border-themed shadow-sm">
+           <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 border-b-2 border-slate-50 pb-4">Distribusi Kelompok Umur</label>
+           <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Kelompok 0-1 Th</label>
+                <input name="Kelas_0_1_Tahun" type="number" required min="0" placeholder="0" class="w-full bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl py-4 px-6 text-xl font-black text-indigo-700 dark:text-indigo-300 border-none outline-none">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Kelompok 1-2 Th</label>
+                <input name="Kelas_1_2_Tahun" type="number" required min="0" placeholder="0" class="w-full bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl py-4 px-6 text-xl font-black text-indigo-700 dark:text-indigo-300 border-none outline-none">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Kelompok 2-5 Th</label>
+                <input name="Kelas_2_5_Tahun" type="number" required min="0" placeholder="0" class="w-full bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl py-4 px-6 text-xl font-black text-indigo-700 dark:text-indigo-300 border-none outline-none">
+              </div>
+           </div>
+           
+           <div class="mt-8 pt-8 border-t-2 border-slate-50 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest leading-none">Total Jumlah Kelas</label>
+                <input name="Jumlah_Kelas_Ibu_Balita" type="number" readonly placeholder="0" class="w-full bg-slate-100 dark:bg-slate-700 rounded-2xl py-4 px-6 text-2xl font-black text-slate-800 dark:text-white border-none outline-none">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">Total Ibu Berpartisipasi</label>
+                <input name="Total_Ibu_Ikut_Kelas_Ibu_Balita" type="number" required min="0" placeholder="0" class="w-full bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl py-4 px-6 text-2xl font-black text-emerald-700 dark:text-emerald-300 border-2 border-emerald-100 dark:border-emerald-900 focus:border-emerald-500 outline-none transition-all">
+              </div>
+           </div>
         </div>
       </div>
     </div>

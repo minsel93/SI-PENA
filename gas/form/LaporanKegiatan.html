@@ -1,63 +1,264 @@
-<div id="template-kegiatan">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Identitas -->
-    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Identitas Laporan</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
-          <select name="Bulan" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
-            <option value="">Pilih Bulan</option>
-            <option value="Januari">Januari</option>
-            <option value="Februari">Februari</option>
-            <option value="Maret">Maret</option>
-            <option value="April">April</option>
-            <option value="Mei">Mei</option>
-            <option value="Juni">Juni</option>
-            <option value="Juli">Juli</option>
-            <option value="Agustus">Agustus</option>
-            <option value="September">September</option>
-            <option value="Oktober">Oktober</option>
-            <option value="November">November</option>
-            <option value="Desember">Desember</option>
-          </select>
+<div id="template-kegiatan" class="space-y-12">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Identitas Section -->
+    <div class="col-span-1 md:col-span-2 bg-slate-50/50 dark:bg-slate-900/50 p-8 rounded-[2rem] border-2 border-themed grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60">Periode Bulan</label>
+        <select name="Bulan" required class="form-select rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-emerald-500 transition-all text-sm font-black appearance-none">
+          <option value="">Pilih Bulan</option>
+          <option value="Januari">Januari</option>
+          <option value="Februari">Februari</option>
+          <option value="Maret">Maret</option>
+          <option value="April">April</option>
+          <option value="Mei">Mei</option>
+          <option value="Juni">Juni</option>
+          <option value="Juli">Juli</option>
+          <option value="Agustus">Agustus</option>
+          <option value="September">September</option>
+          <option value="Oktober">Oktober</option>
+          <option value="November">November</option>
+          <option value="Desember">Desember</option>
+        </select>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60">Tahun</label>
+        <input name="Tahun" type="number" required min="2020" max="2050" placeholder="0" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-emerald-500 transition-all text-sm font-bold">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60">Puskesmas</label>
+        <input name="Nama_Puskesmas" type="text" required readonly class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-slate-400 text-sm font-bold">
+      </div>
+    </div>
+
+    <!-- Sasaran Section -->
+    <div class="col-span-1 md:col-span-2 bg-white dark:bg-slate-800/50 p-8 rounded-[2rem] border-2 border-themed shadow-sm relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-8 text-emerald-100/50 text-6xl">
+        <i class="bi bi-bullseye"></i>
+      </div>
+      <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 border-l-4 border-emerald-500 pl-4">Target Sasaran Riil</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+        <div class="space-y-2">
+          <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">LH (Pusdatin)</label>
+          <input name="Sasaran_Lahir_Hidup_Pusdatin" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-emerald-500 transition-all text-sm font-black">
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
-          <input name="Tahun" type="number" required min="2020" max="2050" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        <div class="space-y-2">
+          <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">LH (SPM PKM)</label>
+          <input name="Sasaran_Lahir_Hidup_SPM_PKM" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-emerald-500 transition-all text-sm font-black">
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Nama Puskesmas</label>
-          <input name="Nama_Puskesmas" type="text" required readonly class="form-control rounded-xl p-3 w-full border-2 border-slate-200 bg-slate-100">
+        <div class="space-y-2">
+          <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Neo Komplikasi</label>
+          <input name="Sasaran_Neonatus_Komplikasi" id="Sasaran_Neonatus_Komplikasi" type="number" readonly placeholder="0" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-black text-slate-400">
+        </div>
+        <div class="space-y-2">
+          <label class="block text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Komp Neo (SPM PKM)</label>
+          <input name="Sasaran_Komplikasi_Neonatus_SPM" id="Sasaran_Komplikasi_Neonatus_SPM" type="number" readonly placeholder="0" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-black text-slate-400">
         </div>
       </div>
     </div>
 
-    <!-- Data Kegiatan -->
-    <div class="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Data Kegiatan</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Kunjungan Neonatal 1 (KN1)</label>
-          <input name="KN1" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+    <div class="col-span-1 md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- KN 1 -->
+      <div class="bg-indigo-50/30 p-8 rounded-[2rem] border-2 border-indigo-100/50">
+        <h3 class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+          <i class="bi bi-1-circle-fill"></i> Kunjungan Neonatal KN 1
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Laki-Laki</label>
+            <input name="KN1_L" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-900 focus:border-indigo-500 text-sm font-bold">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Perempuan</label>
+            <input name="KN1_P" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-900 focus:border-indigo-500 text-sm font-bold">
+          </div>
+          <div class="col-span-2 grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">Total JML</label>
+                <input name="KN1_Jml" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none">
+              </div>
+            <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200">
+              <label class="text-[8px] font-black uppercase tracking-widest text-indigo-400">Absolut</label>
+              <input name="KN1_Abs" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-indigo-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-indigo-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-indigo-400">Pusdatin (%)</label>
+              <input name="KN1_Persen_Pusdatin" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-indigo-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-indigo-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-indigo-400">SPM (%)</label>
+              <input name="KN1_Persen_SPM" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-indigo-700 outline-none border-none pointer-events-none">
+            </div>
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Kunjungan Neonatal Lengkap (KNL)</label>
-          <input name="KNL" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+      </div>
+
+      <!-- KN Lengkap -->
+      <div class="bg-emerald-50/30 p-8 rounded-[2rem] border-2 border-emerald-100/50">
+        <h3 class="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+          <i class="bi bi-check-all"></i> KN Lengkap
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Laki-Laki</label>
+            <input name="KN_Lengkap_L" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-emerald-200 dark:border-emerald-900 focus:border-emerald-500 text-sm font-bold">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Perempuan</label>
+            <input name="KN_Lengkap_P" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-emerald-200 dark:border-emerald-900 focus:border-emerald-500 text-sm font-bold">
+          </div>
+          <div class="col-span-2 grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">Total JML</label>
+                <input name="KN_Lengkap_Jml" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none">
+              </div>
+            <div class="bg-white p-4 rounded-2xl border-2 border-emerald-200">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-400">Absolut</label>
+              <input name="KN_Lengkap_Abs" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-emerald-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-emerald-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-400">Pusdatin (%)</label>
+              <input name="KN_Lengkap_Persen_Pusdatin" type="number" readonly class="w-full bg-transparent text-xl font-black text-emerald-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-emerald-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-400">SPM (%)</label>
+              <input name="KN_Lengkap_Persen_SPM" type="number" readonly class="w-full bg-transparent text-xl font-black text-emerald-700 outline-none border-none pointer-events-none">
+            </div>
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Kunjungan Bayi</label>
-          <input name="Kunjungan_Bayi" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Pelayanan Balita</label>
-          <input name="Pelayanan_Balita" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Pelayanan Anak Prasekolah</label>
-          <input name="Pelayanan_Anak_Prasekolah" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+      </div>
+
+      <!-- Neonatus Komplikasi yang Ditangani Section -->
+      <div class="bg-blue-50/20 p-8 rounded-[2rem] border-2 border-blue-100/50">
+        <h3 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+          <i class="bi bi-shield-plus"></i> Neonatus Komplikasi Ditangani
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Laki-Laki</label>
+            <input name="Neonatus_Komplikasi_Ditangani_L" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900 focus:border-blue-500 text-sm font-bold">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Perempuan</label>
+            <input name="Neonatus_Komplikasi_Ditangani_P" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-900 focus:border-blue-500 text-sm font-bold">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total JML</label>
+            <input name="Neonatus_Komplikasi_Ditangani_Jml" type="number" readonly placeholder="0" class="form-control rounded-xl py-3 px-4 w-full bg-blue-600 border-none text-white text-sm font-black">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Absolut</label>
+            <input name="Neonatus_Komplikasi_Ditangani_Abs" type="number" readonly class="form-control rounded-xl py-3 px-4 w-full bg-white border border-blue-100 text-sm font-bold">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pusdatin (%)</label>
+            <input name="Neonatus_Komplikasi_Ditangani_Persen_Pusdatin" type="number" readonly class="form-control rounded-xl py-3 px-4 w-full bg-white border border-blue-100 text-sm font-bold font-black">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SPM (%)</label>
+            <input name="Neonatus_Komplikasi_Ditangani_Persen_SPM" type="number" readonly class="form-control rounded-xl py-3 px-4 w-full bg-white border border-blue-100 text-sm font-bold font-black">
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Bayi & Balita -->
+    <div class="col-span-1 md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Kunjungan Bayi -->
+      <div class="bg-slate-900 p-8 rounded-[2rem] shadow-xl">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+          <i class="bi bi-heart-fill text-rose-500"></i> Kunjungan Bayi
+        </h3>
+        <div class="grid grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Laki-Laki</label>
+            <input name="Kunjungan_Bayi_L" type="number" required min="0" class="form-control rounded-2xl py-3 px-4 w-full bg-white/5 border border-white/10 text-white text-lg font-black focus:border-rose-500 transition-all">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Perempuan</label>
+            <input name="Kunjungan_Bayi_P" type="number" required min="0" class="form-control rounded-2xl py-3 px-4 w-full bg-white/5 border border-white/10 text-white text-lg font-black focus:border-rose-500 transition-all">
+          </div>
+          <div class="col-span-2 bg-rose-500 p-6 rounded-2xl shadow-lg shadow-rose-900/40">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-white">
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">Total JML</label>
+                <input name="Kunjungan_Bayi_Jml" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none">
+              </div>
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">Absolut</label>
+                <input name="Kunjungan_Bayi_Abs" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none">
+              </div>
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">Pusdatin (%)</label>
+                <input name="Kunjungan_Bayi_Persen_Pusdatin" type="number" readonly class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none text-right">
+              </div>
+              <div>
+                <label class="text-[8px] font-black uppercase tracking-widest opacity-70">SPM (%)</label>
+                <input name="Kunjungan_Bayi_Persen_SPM" type="number" readonly class="w-full bg-transparent text-xl font-black outline-none border-none pointer-events-none text-right">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kesehatan Balita -->
+      <div class="bg-white dark:bg-slate-800/50 p-8 rounded-[2rem] border-2 border-themed shadow-sm relative overflow-hidden">
+        <h3 class="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+          <i class="bi bi-person-check-fill text-xl"></i> Pelayanan Kesehatan Balita
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="space-y-2">
+            <label class="text-[10px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest leading-none">Sasaran Balita 0-4 Th (Pusdatin)</label>
+            <input name="Sasaran_Anak_Balita_0_4_Th_Pusdatin" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-emerald-200 dark:border-emerald-900 text-sm font-black focus:border-emerald-500">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest leading-none">Sasaran Balita (SPM)</label>
+            <input name="Sasaran_Balita_SPM" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3 px-4 w-full bg-white dark:bg-slate-800 border-2 border-emerald-200 dark:border-emerald-900 text-sm font-black focus:border-emerald-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Laki-Laki</label>
+            <input name="Pelayanan_Kesehatan_Balita_L" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3 px-4 w-full bg-slate-50 dark:bg-slate-900 border-2 border-themed focus:border-emerald-500 text-lg font-black transition-all">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Perempuan</label>
+            <input name="Pelayanan_Kesehatan_Balita_P" type="number" required min="0" placeholder="0" class="form-control rounded-2xl py-3 px-4 w-full bg-slate-50 dark:bg-slate-900 border-2 border-themed focus:border-emerald-500 text-lg font-black transition-all">
+          </div>
+          <div class="col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-800/60">Total JML</label>
+              <input name="Pelayanan_Kesehatan_Balita_Jml" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-emerald-900 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-800/60">Absolut</label>
+              <input name="Pelayanan_Kesehatan_Balita_Abs" type="number" readonly placeholder="0" class="w-full bg-transparent text-xl font-black text-emerald-900 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-emerald-800/60">Pusdatin (%)</label>
+              <input name="Pelayanan_Kesehatan_Balita_Persen_Pusdatin" type="number" readonly class="w-full bg-transparent text-xl font-black text-emerald-900 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-slate-400">SPM (%)</label>
+              <input name="Pelayanan_Kesehatan_Balita_Persen_SPM" type="number" readonly class="w-full bg-transparent text-xl font-black text-slate-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-slate-400">Indikator SPM (Abs)</label>
+              <input name="Indikator_SPM_Pelayanan_Kesehatan_Balita_Abs" type="number" readonly class="w-full bg-transparent text-xl font-black text-slate-700 outline-none border-none pointer-events-none">
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
+              <label class="text-[8px] font-black uppercase tracking-widest text-slate-400">Indikator SPM (%)</label>
+              <input name="Indikator_SPM_Pelayanan_Kesehatan_Balita_Persen" type="number" readonly class="w-full bg-transparent text-xl font-black text-slate-700 outline-none border-none pointer-events-none">
+            </div>
+          </div>
+        </div>
+        <div class="mt-8">
+          <div class="space-y-2 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <label class="block text-[8px] font-black uppercase tracking-widest text-emerald-600 mb-1 leading-none">Memiliki & Menggunakan BK</label>
+            <input name="Jumlah_Balita_Memiliki_Dan_Menggunakan_Buku_KIA" type="number" required min="0" placeholder="0" class="form-control rounded-xl py-2.5 px-3 w-full bg-white border border-emerald-200 text-sm font-black focus:border-emerald-500">
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

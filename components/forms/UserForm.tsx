@@ -8,10 +8,10 @@ interface FormProps {
 
 export const UserForm: React.FC<FormProps> = ({ renderInput }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-4">
-        <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
-          <i className="fas fa-user-shield text-blue-600"></i> Manajemen Pengguna
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="md:col-span-2 bg-slate-50 dark:bg-slate-900 shadow-inner dark:shadow-none p-8 rounded-3xl border border-slate-200 dark:border-white/5 mb-4 transition-colors duration-300">
+        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+          <i className="bi bi-person-badge-fill text-blue-500"></i> Manajemen Pengguna
         </h3>
       </div>
       {renderInput('Username', 'Username', 'text', 'Contoh: tareran')}
@@ -19,14 +19,7 @@ export const UserForm: React.FC<FormProps> = ({ renderInput }) => {
       {renderInput('Password', 'Password', 'password', '••••••••')}
       {renderInput('Role', 'Role', 'select', '', false, ['admin', 'user'])}
       {renderInput('Name', 'Nama Lengkap', 'text', 'Nama Lengkap')}
-      
-      <div className="md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200 mt-4">
-        <h4 className="text-sm font-black text-slate-700 uppercase tracking-widest mb-4">Status & Catatan</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {renderInput('Status_Validasi', 'Status User', 'select', '', false, ['Aktif', 'Non-Aktif'])}
-          {renderInput('Catatan_Validasi', 'Catatan User', 'text', 'Catatan')}
-        </div>
-      </div>
+      {renderInput('Status', 'Status Akun', 'select', '', false, ['Aktif', 'Non-Aktif'])}
     </div>
   );
 };

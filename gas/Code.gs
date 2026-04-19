@@ -7,5 +7,18 @@ function doGet(e) {
 }
 
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  try {
+    return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  } catch (e) {
+    // If it fails, try stripping 'form/' in case the user didn't include the folder name in GAS
+    if (filename.startsWith('form/')) {
+      var fallbackName = filename.replace('form/', '');
+      try {
+        return HtmlService.createHtmlOutputFromFile(fallbackName).getContent();
+      } catch (e2) {
+        return '<!-- Error loading template: ' + filename + ' -->';
+      }
+    }
+    return '<!-- Error loading template: ' + filename + ' -->';
+  }
 }

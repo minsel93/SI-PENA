@@ -1,81 +1,104 @@
-<div id="template-kematianBalita">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Identitas -->
-    <div class="col-span-1 md:col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Identitas Laporan</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
-          <select name="Bulan" required class="form-select rounded-xl p-3 w-full border-2 border-slate-200">
-            <option value="">Pilih Bulan</option>
-            <option value="Januari">Januari</option>
-            <option value="Februari">Februari</option>
-            <option value="Maret">Maret</option>
-            <option value="April">April</option>
-            <option value="Mei">Mei</option>
-            <option value="Juni">Juni</option>
-            <option value="Juli">Juli</option>
-            <option value="Agustus">Agustus</option>
-            <option value="September">September</option>
-            <option value="Oktober">Oktober</option>
-            <option value="November">November</option>
-            <option value="Desember">Desember</option>
-          </select>
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
-          <input name="Tahun" type="number" required min="2020" max="2050" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Nama Puskesmas</label>
-          <input name="Nama_Puskesmas" type="text" required readonly class="form-control rounded-xl p-3 w-full border-2 border-slate-200 bg-slate-100">
-        </div>
+<div id="template-kematianBalita" class="space-y-12">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Identitas Section -->
+    <div class="col-span-1 md:col-span-2 bg-slate-50/50 dark:bg-slate-900/50 p-8 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Periode Bulan</label>
+        <select name="Bulan" required class="form-select rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-white dark:bg-slate-800 focus:border-rose-500 transition-all text-sm font-black appearance-none">
+          <option value="">Pilih Bulan</option>
+          <option value="Januari">Januari</option>
+          <option value="Februari">Februari</option>
+          <option value="Maret">Maret</option>
+          <option value="April">April</option>
+          <option value="Mei">Mei</option>
+          <option value="Juni">Juni</option>
+          <option value="Juli">Juli</option>
+          <option value="Agustus">Agustus</option>
+          <option value="September">September</option>
+          <option value="Oktober">Oktober</option>
+          <option value="November">November</option>
+          <option value="Desember">Desember</option>
+        </select>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Tahun</label>
+        <input name="Tahun" type="number" required min="2020" max="2100" class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-white dark:bg-slate-800 focus:border-rose-500 transition-all text-sm font-bold">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-60 leading-none">Puskesmas</label>
+        <input name="Nama_Puskesmas" type="text" readonly class="form-control rounded-2xl py-3.5 px-4 w-full border-2 border-themed bg-slate-50 dark:bg-slate-900 text-slate-400 text-sm font-bold">
       </div>
     </div>
 
-    <!-- Data Kematian Balita -->
-    <div class="col-span-1 md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b pb-2">Data Kematian Balita</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Diare</label>
-          <input name="Diare" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+    <!-- Data Kematian Bayi & Anak -->
+    <div class="col-span-1 md:col-span-2 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 29 Hari - 11 Bulan -->
+      <div class="bg-indigo-50/30 dark:bg-indigo-900/10 p-8 rounded-[2.5rem] border-2 border-indigo-100 dark:border-indigo-900/30 space-y-6">
+        <h3 class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <i class="bi bi-heart-pulse-fill"></i> Kematian Bayi & Anak
+        </h3>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 border-themed shadow-sm mb-6">
+          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-4 leading-none text-rose-500">Kematian Neonatal (0-28 Hari)</label>
+          <input name="Jumlah_Kematian_Neonatal" type="number" required min="0" placeholder="0" class="w-full bg-transparent text-4xl font-black text-slate-800 dark:text-white outline-none">
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Pneumonia</label>
-          <input name="Pneumonia" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 border-themed shadow-sm">
+          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-4 leading-none">Kematian Pasca Neonatal (29Hr - 11Bln)</label>
+          <input name="Kematian_Post_Neonatal_29Hr_11Bln" type="number" required min="0" placeholder="0" class="w-full bg-transparent text-4xl font-black text-slate-800 dark:text-white outline-none">
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Tetanus</label>
-          <input name="Tetanus" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        <div class="space-y-3">
+          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 leading-none border-b border-indigo-100 pb-2">Penyebab (Pasca Neo)</label>
+          <div class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+            ${['Pneumonia', 'Diare', 'Kelainan_Kongenital_Jantung', 'Meningitis', 'Kelainan_Kongenital_Lain', 'Demam_Berdarah', 'Penyakit_Saraf', 'Lain_Lain'].map(s => `
+              <div class="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-2xl border border-themed shadow-sm">
+                <span class="text-[8px] font-bold text-slate-500 uppercase">${s.replace(/_/g, ' ')}</span>
+                <input name="Sebab_Post_Neo_${s}" type="number" required min="0" placeholder="0" class="w-16 bg-slate-50 dark:bg-slate-900 rounded-lg py-1 px-2 text-center font-black text-sm border-none outline-none">
+              </div>
+            `).join('')}
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Difteri</label>
-          <input name="Difteri" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+      </div>
+
+      <!-- 12 - 59 Bulan -->
+      <div class="bg-amber-50/30 dark:bg-amber-900/10 p-8 rounded-[2.5rem] border-2 border-amber-100 dark:border-amber-900/30 space-y-6">
+        <h3 class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <i class="bi bi-person-heart"></i> ANAK BALITA
+        </h3>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border-2 border-themed shadow-sm">
+          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-4 leading-none">Kematian 12 - 59 Bln</label>
+          <input name="Kematian_Anak_Balita_12_59_Bln" type="number" required min="0" placeholder="0" class="w-full bg-transparent text-4xl font-black text-slate-800 dark:text-white outline-none">
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Campak</label>
-          <input name="Campak" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+        <div class="space-y-3">
+          <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 leading-none border-b border-amber-100 pb-2">Penyebab (12-59Bln)</label>
+          <div class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+            ${['Diare', 'Demam_Berdarah', 'Pneumonia', 'Kelainan_Kongenital', 'Kecelakaan_Lalin', 'Penyakit_Sistem_Saraf', 'Tenggelam', 'Infeksi_Parasit', 'Lain_Lain'].map(s => `
+              <div class="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-2xl border border-themed shadow-sm">
+                <span class="text-[8px] font-bold text-slate-500 uppercase">${s.replace(/_/g, ' ')}</span>
+                <input name="Sebab_Balita_${s}" type="number" required min="0" placeholder="0" class="w-16 bg-slate-50 dark:bg-slate-900 rounded-lg py-1 px-2 text-center font-black text-sm border-none outline-none">
+              </div>
+            `).join('')}
+          </div>
         </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Malaria</label>
-          <input name="Malaria" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">DBD</label>
-          <input name="DBD" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Kecelakaan</label>
-          <input name="Kecelakaan" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Covid-19</label>
-          <input name="Covid_19" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
-        </div>
-        <div class="space-y-1">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Lain-lain</label>
-          <input name="Lain_lain" type="number" required min="0" class="form-control rounded-xl p-3 w-full border-2 border-slate-200">
+      </div>
+
+      <!-- Rekapitulasi -->
+      <div class="bg-rose-900 p-8 rounded-[2.5rem] text-white shadow-2xl space-y-8 relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 text-white/5 text-[10rem]"><i class="bi bi-heartbreak"></i></div>
+        <div class="relative z-10">
+          <h3 class="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-6 leading-none">REKAPITULASI TOTAL</h3>
+          
+          <div class="space-y-6">
+            <div class="bg-white/5 border border-white/10 p-6 rounded-3xl">
+              <label class="text-[9px] font-black text-rose-200 uppercase tracking-widest block mb-2">Total Kematian Bayi</label>
+              <input name="Kematian_Bayi_0_11_Bln" type="number" readonly placeholder="0" class="w-full bg-transparent text-4xl font-black text-white outline-none">
+              <p class="text-[8px] text-rose-300 mt-2 font-medium uppercase italic">(Neonatal + Pasca Neonatal)</p>
+            </div>
+            
+            <div class="bg-white/10 border border-white/20 p-8 rounded-[2.5rem] shadow-inner">
+              <label class="text-[10px] font-black text-rose-100 uppercase tracking-[0.2em] block mb-4 text-center">Grand Total Kematian Balita</label>
+              <input name="Kematian_Balita_0_59_Bln" type="number" readonly placeholder="0" class="w-full bg-transparent text-7xl font-black text-white text-center outline-none">
+              <p class="text-[9px] text-rose-200 mt-4 text-center font-bold tracking-widest uppercase">Umur 0 - 59 Bulan</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

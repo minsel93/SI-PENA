@@ -4,7 +4,6 @@ import Dashboard from './components/Dashboard';
 import FormRenderer from './components/FormRenderer';
 import { Login } from './components/Login';
 import { FormType, AppState, User } from './types';
-import { NAVIGATION_MENU } from './constants';
 import { gasService } from './services/gasService';
 
 const App: React.FC = () => {
@@ -21,11 +20,46 @@ const App: React.FC = () => {
     currentUser: null
   });
 
+  const fetchInitialData = async () => {
+    setState(prev => ({ ...prev, isLoading: true }));
+    try {
+      const data = await gasService.getAllDashboardData();
+      
+      setState(prev => ({
+        ...prev,
+        records: data,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error("Gagal mengambil data awal:", error);
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('sipena_theme') as 'light' | 'dark') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('sipena_theme', newTheme);
+  };
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   // Check for existing session and fetch initial data
   useEffect(() => {
     const savedUser = localStorage.getItem('sipena_user');
     if (savedUser) {
       const user = JSON.parse(savedUser) as User;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState(prev => ({ 
         ...prev, 
         isAuthenticated: true, 
@@ -35,28 +69,6 @@ const App: React.FC = () => {
       fetchInitialData();
     }
   }, []);
-
-  const fetchInitialData = async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
-    try {
-      const sheets = ['sasaran', 'kegiatan', 'rpjmn', 'kelasBalita', 'kelasBalitaKabKota', 'kematianNeonatal', 'kematianBalita', 'users'];
-      const results = await Promise.all(sheets.map(s => gasService.getRecords(s)));
-      
-      const newRecords: any = {};
-      sheets.forEach((s, i) => {
-        newRecords[s] = results[i];
-      });
-
-      setState(prev => ({
-        ...prev,
-        records: newRecords,
-        isLoading: false
-      }));
-    } catch (error) {
-      console.error("Gagal mengambil data awal:", error);
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
-  };
 
   const handleLogin = (user: User) => {
     localStorage.setItem('sipena_user', JSON.stringify(user));
@@ -122,6 +134,7 @@ const App: React.FC = () => {
         notification: { message: 'Laporan berhasil disimpan ke database!', type: 'success' }
       }));
     } catch (error) {
+      console.error("Gagal mengirim laporan:", error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false,
@@ -149,6 +162,7 @@ const App: React.FC = () => {
         notification: { message: 'Data berhasil dihapus!', type: 'success' }
       }));
     } catch (error) {
+      console.error("Gagal menghapus data:", error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false,
@@ -163,44 +177,51 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Header */}
-      <header className="glass-header shadow-sm">
-        <div className="container-fluid px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-5 cursor-pointer" onClick={() => handleNavigation(FormType.DASHBOARD)}>
+      <header className="glass-header shadow-2xl sticky top-0 z-[1000] border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
+        <div className="container-fluid px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-6 cursor-pointer group" onClick={() => handleNavigation(FormType.DASHBOARD)}>
             <img 
               src="https://i.ibb.co.com/b58BrxT3/IMAGE-1.png" 
-              className="h-24 w-auto drop-shadow-md transition-transform hover:scale-105" 
+              className="h-20 w-auto group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
               alt="Logo Kabupaten Minahasa Selatan" 
             />
-            <div className="border-l-2 border-slate-200 pl-5">
-              <h1 className="text-4xl font-black text-blue-900 leading-none tracking-tighter">SI–PENA</h1>
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.1em] mt-2">Sistem Pelaporan Kesehatan Anak</p>
+            <div className="border-l-2 border-slate-200 dark:border-slate-800 pl-6">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">SI–PENA</h1>
+              <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.3em] mt-2">Sistem Pelaporan Kesehatan Anak</p>
             </div>
           </div>
           
-          <nav className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-3 mr-6 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200">
-              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {state.currentUser?.username.charAt(0).toUpperCase()}
+          <nav className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-3 mr-4 bg-slate-100 dark:bg-slate-900/50 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/5">
+              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-500/20">
+                {state.currentUser?.username?.charAt(0).toUpperCase() || '?'}
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">User Aktif</p>
-                <p className="text-xs font-black text-slate-800">{state.currentUser?.puskesmasName || state.currentUser?.username}</p>
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">User</p>
+                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{state.currentUser?.puskesmasName || state.currentUser?.username}</p>
               </div>
             </div>
 
-            <button onClick={() => handleNavigation(FormType.DASHBOARD)} className="nav-link-custom text-sm">
-              <i className="bi bi-grid-1x2-fill text-lg"></i> Beranda
+            <button onClick={() => handleNavigation(FormType.DASHBOARD)} className="nav-link-custom active:bg-white/5">
+              <i className="bi bi-grid-1x2-fill text-lg"></i> <span className="hidden xl:inline ml-2">Beranda</span>
             </button>
-            <button onClick={() => setActiveModal('tentang')} className="nav-link-custom text-sm">
-              <i className="bi bi-info-circle text-lg"></i> Tentang
+            <button onClick={() => setActiveModal('tentang')} className="nav-link-custom">
+              <i className="bi bi-info-circle text-lg"></i> <span className="hidden xl:inline ml-2">Tentang</span>
             </button>
-            <button onClick={() => setActiveModal('bantuan')} className="nav-link-custom text-sm">
-              <i className="bi bi-question-circle text-lg"></i> Bantuan
+            <button onClick={() => setActiveModal('bantuan')} className="nav-link-custom">
+              <i className="bi bi-question-circle text-lg"></i> <span className="hidden xl:inline ml-2">Bantuan</span>
             </button>
-            <button onClick={handleLogout} className="bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-rose-200 ml-2">
-              <i className="fas fa-power-off"></i> Keluar
+            
+            <button onClick={toggleTheme} className="nav-link-custom w-10 h-10 flex items-center justify-center p-0 rounded-xl" title="Ganti Mode">
+              <i className={`bi ${theme === 'dark' ? 'bi-sun-fill text-amber-400' : 'bi-moon-stars-fill text-indigo-600'} text-lg`}></i>
+            </button>
+
+            <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-2"></div>
+            
+            <button onClick={handleLogout} className="bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border border-rose-500/30">
+              <i className="fas fa-power-off"></i> <span className="hidden sm:inline">Keluar</span>
             </button>
           </nav>
         </div>
@@ -208,18 +229,30 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 container-fluid px-6 py-10 lg:px-12">
-        {state.currentForm === FormType.DASHBOARD ? (
+        {state.isLoading && Object.values(state.records).every(arr => Array.isArray(arr) && arr.length === 0) ? (
+          <div className="flex flex-col items-center justify-center py-40">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-emerald-500/10 border-t-emerald-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-10 h-10 bg-slate-900 rounded-full"></div>
+              </div>
+            </div>
+            <p className="mt-8 text-slate-400 font-black tracking-[0.2em] uppercase text-xs animate-pulse">Sinkronisasi Data...</p>
+          </div>
+        ) : state.currentForm === FormType.DASHBOARD ? (
           <Dashboard 
             onNavigate={handleNavigation} 
             onDelete={handleDeleteData}
             records={state.isAdmin ? state.records : Object.keys(state.records).reduce((acc: any, key) => {
-              acc[key] = (state.records[key as keyof typeof state.records] as any[]).filter(
+              const list = state.records[key as keyof typeof state.records];
+              acc[key] = Array.isArray(list) ? list.filter(
                 (r: any) => r.Nama_Puskesmas === state.currentUser?.puskesmasName
-              );
+              ) : [];
               return acc;
             }, {})} 
             isAdmin={state.isAdmin}
             currentUser={state.currentUser}
+            theme={theme}
           />
         ) : (
           <div className="max-w-5xl mx-auto">
@@ -227,7 +260,7 @@ const App: React.FC = () => {
                 onClick={() => handleNavigation(FormType.DASHBOARD)}
                 className="mb-8 flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors"
             >
-                <i className="fas fa-arrow-left"></i> Kembali ke Beranda
+                <i className="bi bi-arrow-left"></i> Kembali ke Beranda
             </button>
             <FormRenderer 
               type={state.currentForm} 
@@ -235,48 +268,49 @@ const App: React.FC = () => {
               initialData={state.editingData?.data}
               isAdmin={state.isAdmin}
               currentUser={state.currentUser}
+              theme={theme}
             />
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="mt-20 py-16 px-6 lg:px-12 border-t border-white/5">
-        <div className="container-fluid grid grid-cols-1 md:grid-cols-3 gap-12">
+      <footer className="mt-20 py-16 px-6 lg:px-12 border-t border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <div className="container-fluid grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-600 dark:text-slate-400">
           <div className="space-y-6">
-            <div className="bg-white/10 px-4 py-2 rounded-lg inline-block">
+            <div className="bg-slate-900 dark:bg-white/10 px-4 py-2 rounded-lg inline-block">
                 <span className="text-white font-black tracking-tighter text-xl">SI-PENA</span>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+            <p className="text-sm leading-relaxed max-w-sm">
               Sistem Pelaporan Kesehatan Anak di Kabupaten Minahasa Selatan Secara Terintegrasi. Mengawal kesehatan generasi penerus bangsa.
             </p>
           </div>
           
           <div>
-            <h5 className="text-white font-bold mb-6 text-lg tracking-wide uppercase">HUBUNGI KAMI</h5>
-            <ul className="space-y-4 text-sm text-slate-400">
+            <h5 className="text-slate-900 dark:text-white font-bold mb-6 text-lg tracking-wide uppercase">HUBUNGI KAMI</h5>
+            <ul className="space-y-4 text-sm">
               <li className="flex gap-3">
-                <i className="fas fa-map-marker-alt text-emerald-500 mt-1"></i>
+                <i className="bi bi-geo-alt-fill text-emerald-500 mt-1"></i>
                 Jl. Trans Sulawesi, Kel. Pondang, Amurang Timur 95354
               </li>
               <li className="flex gap-3">
-                <i className="fas fa-envelope text-emerald-500 mt-1"></i>
+                <i className="bi bi-envelope-fill text-emerald-500 mt-1"></i>
                 dinkesmsumpag@gmail.com
               </li>
             </ul>
           </div>
 
           <div>
-            <h5 className="text-white font-bold mb-6 text-lg tracking-wide uppercase">MEDIA SOSIAL</h5>
+            <h5 className="text-slate-900 dark:text-white font-bold mb-6 text-lg tracking-wide uppercase">MEDIA SOSIAL</h5>
             <div className="flex gap-4">
-              <a href="https://www.facebook.com/share/1FDFaLRUDE/" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 transition-all"><i className="fab fa-facebook-f text-lg"></i></a>
-              <a href="https://www.instagram.com/dinkes_minsel?igsh=d3NtMmx4NzU4YWdw" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 transition-all"><i className="fab fa-instagram text-lg"></i></a>
-              <a href="https://wa.me/6285214000037" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 transition-all"><i className="fab fa-whatsapp text-lg"></i></a>
+              <a href="https://www.facebook.com/share/1FDFaLRUDE/" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all"><i className="bi bi-facebook text-lg"></i></a>
+              <a href="https://www.instagram.com/dinkes_minsel?igsh=d3NtMmx4NzU4YWdw" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all"><i className="bi bi-instagram text-lg"></i></a>
+              <a href="https://wa.me/6285214000037" target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all"><i className="bi bi-whatsapp text-lg"></i></a>
             </div>
           </div>
         </div>
         
-        <div className="container-fluid mt-16 pt-8 border-t border-white/5 text-center text-xs font-medium text-slate-500 uppercase tracking-[0.3em]">
+        <div className="container-fluid mt-16 pt-8 border-t border-slate-200 dark:border-white/5 text-center text-xs font-medium text-slate-500 dark:text-slate-600 uppercase tracking-[0.3em]">
             SI-PENA © 2026 | Kabupaten Minahasa Selatan
         </div>
       </footer>

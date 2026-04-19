@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SI-PENA - Sistem Pelaporan Kesehatan Anak</title>
+  <script>
+    // Immediate startup check
+    console.log('SI-PENA: HTML parsing started');
+    window.addEventListener('error', function(e) {
+      console.error('SI-PENA Runtime Error:', e.message);
+    });
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,10 +18,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <?!= include('Style'); ?>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-50 min-h-screen text-slate-900">
   
   <!-- Login Screen -->
-  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden">
+  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden z-[100]">
     <!-- Background Elements -->
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
       <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-400/20 blur-[120px]"></div>
@@ -96,7 +103,7 @@
   </div>
 
   <!-- Main App (Hidden initially) -->
-  <div id="main-app" class="hidden min-h-screen flex flex-col">
+  <div id="main-app" class="hidden min-h-screen flex flex-col bg-slate-50 relative z-[50]">
     <?!= include('Sidebar'); ?>
     
     <!-- Main Content Area -->
@@ -146,15 +153,12 @@
     </footer>
   </div>
 
-  <!-- Notification Toast -->
-  <div id="notification" class="hidden fixed top-24 right-8 z-[1001] bg-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in">
-    <i id="notif-icon" class="fas fa-check-circle text-xl"></i>
-    <span id="notif-message" class="font-bold">Pesan</span>
-  </div>
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-24 right-4 sm:right-8 z-[2000] flex flex-col gap-4 max-w-sm w-full pointer-events-none"></div>
 
   <!-- Loading Overlay -->
   <div id="loading-overlay" class="hidden fixed inset-0 z-[9999] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
-    <div class="w-16 h-16 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+    <div class="spinner mb-4"></div>
     <p class="text-slate-800 font-bold text-lg animate-pulse">Memproses Data...</p>
   </div>
 
@@ -162,14 +166,14 @@
   
   <!-- Form Templates -->
   <div id="templates" class="hidden">
-    <?!= include('form/Sasaran'); ?>
-    <?!= include('form/LaporanKegiatan'); ?>
-    <?!= include('form/RPJMN'); ?>
-    <?!= include('form/KelasBalita'); ?>
-    <?!= include('form/KelasBalitaKabKota'); ?>
-    <?!= include('form/KematianNeonatal'); ?>
-    <?!= include('form/KematianBalita'); ?>
-    <?!= include('form/User'); ?>
+    <script type="text/template" id="raw-template-sasaran"><?!= include('form/Sasaran'); ?></script>
+    <script type="text/template" id="raw-template-kegiatan"><?!= include('form/LaporanKegiatan'); ?></script>
+    <script type="text/template" id="raw-template-rpjmn"><?!= include('form/RPJMN'); ?></script>
+    <script type="text/template" id="raw-template-kelasBalita"><?!= include('form/KelasBalita'); ?></script>
+    <script type="text/template" id="raw-template-kelasBalitaKabKota"><?!= include('form/KelasBalitaKabKota'); ?></script>
+    <script type="text/template" id="raw-template-kematianNeonatal"><?!= include('form/KematianNeonatal'); ?></script>
+    <script type="text/template" id="raw-template-kematianBalita"><?!= include('form/KematianBalita'); ?></script>
+    <script type="text/template" id="raw-template-users"><?!= include('form/User'); ?></script>
   </div>
 </body>
 </html>
